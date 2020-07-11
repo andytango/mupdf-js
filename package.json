@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "MuPDF compiled to WebAssembly",
   "main": "dist/index.js",
+  "repository": "https://github.com/andytango/mupdf-js",
   "scripts": {
     "build": "yarn build:wasm && yarn build:tsc && yarn build:cp",
     "build:wasm": "ts-node ./bin/build.ts",
