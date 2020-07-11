@@ -1,0 +1,30 @@
+{
+  "name": "mupdf-js",
+  "version": "1.0.0",
+  "description": "MuPDF compiled to WebAssembly",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ts-node ./bin/build.ts",
+    "build-examples": "ts-node ./bin/build-examples.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "pdf",
+    "mupdf",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "andrew@rioja.io",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/dockerode": "^2.5.33",
+    "@types/needle": "^2.0.4",
+    "@types/node": "^14.0.20",
+    "@types/rimraf": "^3.0.0",
+    "dockerode": "^3.2.0",
+    "needle": "^2.5.0",
+    "rimraf": "^3.0.2",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
+  }
+}
