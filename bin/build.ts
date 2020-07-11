@@ -4,11 +4,11 @@ import needle from "needle";
 import rimraf from "rimraf";
 import { resolve } from "path";
 
-const MUPDF_VERISON = "1.17.0";
+const MUPDF_VERSION = "1.17.0";
 
 async function main() {
-  // await clearTmpDirectory();
-  // await downloadMuPdf();
+  await clearTmpDirectory();
+  await downloadMuPdf();
   await runDockerBuildCommand();
 }
 
@@ -32,7 +32,7 @@ function downloadMuPdf() {
 }
 
 function getMuPdfUrl(): string {
-  return `https://mupdf.com/downloads/archive/mupdf-${MUPDF_VERISON}-source.tar.gz`;
+  return `https://mupdf.com/downloads/archive/mupdf-${MUPDF_VERSION}-source.tar.gz`;
 }
 
 async function runDockerBuildCommand() {
@@ -51,7 +51,7 @@ async function runDockerBuildCommand() {
       HostConfig: {
         AutoRemove: true,
         Binds: [
-          `${resolve(`./tmp/mupdf-${MUPDF_VERISON}-source`)}:/src`,
+          `${resolve(`./tmp/mupdf-${MUPDF_VERSION}-source`)}:/src`,
           `${resolve(`.`)}:/opt/mupdf-js`,
           `${resolve(`./bin/Makefile`)}:/src/platform/wasm/Makefile`,
         ],
