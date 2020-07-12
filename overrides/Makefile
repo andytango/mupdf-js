@@ -29,7 +29,6 @@ $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap", "FS"]' \
 		-s MODULARIZE=1 \
-		-s ASSERTIONS=3 \
 		-s 'EXPORT_NAME="mupdf"' \
 		-I ../../include \
 		--pre-js wrap.js \
