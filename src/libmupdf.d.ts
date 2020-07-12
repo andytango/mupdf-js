@@ -1,7 +1,5 @@
 import "emscripten";
 
-type FSInstance = typeof FS;
-
 export namespace MuPdf {
   export interface DocumentHandle {}
   type pageNumber = number;
@@ -12,7 +10,7 @@ export namespace MuPdf {
   }
 
   interface Module extends EmscriptenModule {
-    FS: FSInstance;
+    FS: typeof FS;
 
     openDocument(filename: string): DocumentHandle;
 
@@ -36,9 +34,9 @@ export namespace MuPdf {
       dpi: resolution
     ): string;
 
-    drawPageAsHTML(doc: DocumentHandle, page: pageNumber): void;
+    drawPageAsHTML(doc: DocumentHandle, page: pageNumber): string;
 
-    drawPageAsSVG(doc: DocumentHandle, page: pageNumber): void;
+    drawPageAsSVG(doc: DocumentHandle, page: pageNumber): string;
   }
 }
 
