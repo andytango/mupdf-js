@@ -30,6 +30,7 @@ $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 		-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap", "FS"]' \
 		-s MODULARIZE=1 \
 		-s ASSERTIONS=3 \
+		-s BUILD_AS_WORKER=1 \
 		-s 'EXPORT_NAME="mupdf"' \
 		-I ../../include \
 		--pre-js wrap.js \
