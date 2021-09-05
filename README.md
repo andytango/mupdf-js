@@ -15,13 +15,13 @@ npm i mupdf-js
 
 ## Basic Usage
 
-Before you do any processing, you'll need to intialise the MuPdf library:
+Before you do any processing, you'll need to initialise the MuPdf library:
 
 ```tsx
-import initMuPdf from "mupdf-js";
+import createMuPdf from "mupdf-js";
 
 async function handleSomePdf(file: File) {
-  const mupdf = await initMuPdf();
+  const mupdf = await createMuPdf();
   
   //...
 }
@@ -32,10 +32,10 @@ In the *browser*, you'll most likely retrieve a [File](https://developer.mozilla
 You'll need to convert the file firstly to an `ArrayBuffer`, then to a `Uint8Array`:
 
 ```js
-import initMuPdf from "mupdf-js";
+import createMuPdf from "mupdf-js";
 
 async function handleSomePdf(file) {
-  const mupdf = await initMuPdf();
+  const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
   
@@ -46,10 +46,10 @@ async function handleSomePdf(file) {
 Once you have this, you can *load* the file into the MuPdf environment, creating a MuPdf *document*:
 
 ```js
-import initMuPdf from "mupdf-js";
+import createMuPdf from "mupdf-js";
 
 async function handleSomePdf(file) {
-  const mupdf = await initMuPdf();
+  const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
   const doc = pdf.load(new Uint8Array(buf));
@@ -59,10 +59,10 @@ async function handleSomePdf(file) {
 You now have three different options to render the PDF document:
 
 ```js
-import initMuPdf from "mupdf-js";
+import createMuPdf from "mupdf-js";
 
 async function handleSomePdf(file) {
-  const mupdf = await initMuPdf();
+  const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
   const doc = pdf.load(new Uint8Array(buf));
