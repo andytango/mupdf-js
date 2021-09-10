@@ -2,7 +2,7 @@
 This is a port of [MuPDF](https://mupdf.com/docs/) to javascript and webassembly, giving you the following:
 
 - 🔥 **Blazing fast** rendering of PDFs to **PNG**, **SVG** and even **HTML**
-- 💼 Run on your **client** or **server**. Basically any platform that supports Webassembly!
+- 💼 Run in the **web browser** or your **server**. Basically any platform that supports Webassembly!
 - 🗺️ A super **simple** API that's also **completely flexible**, see below...
 
 # 🏁 Getting Started
@@ -52,7 +52,7 @@ async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
-  const doc = pdf.load(new Uint8Array(buf));
+  const doc = pdf.load(arrayBuf);
 }
 ```
 
@@ -65,7 +65,7 @@ async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
-  const doc = pdf.load(new Uint8Array(buf));
+  const doc = pdf.load(arrayBuf);
   
   // Each of these returns a string:
   
