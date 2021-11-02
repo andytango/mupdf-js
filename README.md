@@ -52,7 +52,7 @@ async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
-  const doc = pdf.load(arrayBuf);
+  const doc = mupdf.load(arrayBuf);
 }
 ```
 
@@ -65,7 +65,7 @@ async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
   const buf = await file.arrayBuffer();
   const arrayBuf = new Uint8Array(buf);
-  const doc = pdf.load(arrayBuf);
+  const doc = mupdf.load(arrayBuf);
   
   // Each of these returns a string:
   
