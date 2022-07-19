@@ -11,7 +11,7 @@ async function main() {
   const doc = openDocument("example.pdf");
   const n = countPages(doc);
 
-  ["png", "svg", "html", "text"].forEach((ext) => {
+  ["png", "svg", "html", "text", "search"].forEach((ext) => {
     mkdirSync(`./examples/${ext}`, { recursive: true });
   });
 
