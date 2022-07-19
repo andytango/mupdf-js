@@ -49,6 +49,16 @@ Module.onRuntimeInitialized = function () {
   mupdf.outlinePage = Module.cwrap("outlinePage", "number", ["number"]);
   mupdf.outlineDown = Module.cwrap("outlineDown", "number", ["number"]);
   mupdf.outlineNext = Module.cwrap("outlineNext", "number", ["number"]);
+  mupdf.getPageText = Module.cwrap("getPageText", "string", ["number", "number"]);
+  const searchPageText = Module.cwrap("searchPageText", "string", ["number", "number", "string", "number"]);
+
+  mupdf.searchPageText = (doc, pageNumber, searchString, maxHits) => {
+    const resultStr = searchPageText(doc, pageNumber, searchString, maxHits);
+    return resultStr.slice(0, -1).split('\n').map((line) => {
+      const [x, y, w, h] = line.split(';').map(item => parseFloat(item));
+      return {x, y, w, h};
+    })
+  }
 };
 
 mupdf.documentOutline = function (doc) {

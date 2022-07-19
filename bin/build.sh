@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cp /opt/mupdf-js/overrides/* /src/platform/wasm/
+
 echo 'Running apt-get update'
 apt-get update
 

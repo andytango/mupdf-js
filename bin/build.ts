@@ -57,8 +57,6 @@ async function runDockerBuildCommand() {
         Binds: [
           `${resolve(`./tmp/mupdf-${MUPDF_VERSION}-source`)}:/src`,
           `${resolve(`.`)}:/opt/mupdf-js`,
-          `${resolve(`./overrides/Makefile`)}:/src/platform/wasm/Makefile`,
-          `${resolve(`./overrides/wrap.js`)}:/src/platform/wasm/wrap.js`,
         ],
       },
       Env: [`HOST_USER=${user}`],

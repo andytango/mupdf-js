@@ -114,6 +114,34 @@ Arguments:
 
 Returns: *an HTML file that uses absolute positioned elements for layout.*
 
+## Text operations
+
+### Get text from page
+
+```js
+mupdf.getPageText(document, page);
+```
+
+Arguments:
+- document: *a MuPdf document object*
+- page: *the page number to be rendered, starting from 1*
+
+Returns: *string containing all text collected from page*
+
+### Search on the page
+
+```js
+mupdf.searchPageText(document, page, searchString, maxHits);
+```
+
+Arguments:
+- document: *a MuPdf document object*
+- page: *the page number to be rendered, starting from 1*
+- searchString: *string to search*
+- maxHits: *the maximum possible number of matches (it stops search when reaches this limit)*
+
+Returns: *array of found rectangles of text matches ({x: number, y: number, w: number, h: number}[])*
+
 # License
 
 AGPL, subject to the [MuPDF license](https://www.mupdf.com/license.html).

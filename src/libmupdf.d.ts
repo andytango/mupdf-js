@@ -4,6 +4,12 @@ export namespace MuPdf {
   export interface DocumentHandle {}
   type pageNumber = number;
   type resolution = number;
+  export interface Box {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }
 
   interface Instance extends Module {
     load(fileData: Buffer | ArrayBufferView, name?: string): DocumentHandle;
@@ -37,6 +43,10 @@ export namespace MuPdf {
     drawPageAsHTML(doc: DocumentHandle, page: pageNumber): string;
 
     drawPageAsSVG(doc: DocumentHandle, page: pageNumber): string;
+
+    getPageText(doc: DocumentHandle, page: pageNumber): string;
+
+    searchPageText(doc: DocumentHandle, page: pageNumber, searchString: string, maxHits: number): Box[];
   }
 }
 
