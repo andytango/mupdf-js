@@ -46,17 +46,17 @@ Module.onRuntimeInitialized = function () {
   mupdf.loadOutline = Module.cwrap("loadOutline", "number", ["number"]);
   mupdf.freeOutline = Module.cwrap("freeOutline", null, ["number"]);
   mupdf.outlineTitle = Module.cwrap("outlineTitle", "string", ["number"]);
-  mupdf.outlinePage = Module.cwrap("outlinePage", "number", ["number"]);
-  mupdf.outlineDown = Module.cwrap("outlineDown", "number", ["number"]);
-  mupdf.outlineNext = Module.cwrap("outlineNext", "number", ["number"]);
+  mupdf.outlinePage = Module.cwrap("outlinePage", "number", ["number", "number"]);
+  mupdf.outlineDown = Module.cwrap("outlineDown", "number", ["number", "number"]);
+  mupdf.outlineNext = Module.cwrap("outlineNext", "number", ["number", "number"]);
   mupdf.getPageText = Module.cwrap("getPageText", "string", ["number", "number"]);
   const searchPageText = Module.cwrap("searchPageText", "string", ["number", "number", "string", "number"]);
 
   mupdf.searchPageText = (doc, pageNumber, searchString, maxHits) => {
     const resultStr = searchPageText(doc, pageNumber, searchString, maxHits);
     return resultStr.slice(0, -1).split('\n').map((line) => {
-      const [x, y, w, h] = line.split(';').map(item => parseFloat(item));
-      return {x, y, w, h};
+      const [x, y, w, h, c] = line.split(';').map(item => parseFloat(item));
+      return {x, y, w, h, isContinuation: c === 1};
     })
   }
 };
