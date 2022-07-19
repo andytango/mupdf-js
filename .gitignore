@@ -5,3 +5,5 @@ dist
 examples/html/*
 examples/png/*
 examples/svg/*
+examples/text/*
+examples/search/*
