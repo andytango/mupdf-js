@@ -22,7 +22,7 @@ function clearTmpDirectory() {
 function downloadMuPdf() {
   mkdirSync("./tmp");
 
-  return new Promise((res) => {
+  return new Promise<void>((res) => {
     console.log("Downloading MuPdf sources...");
     const tar = spawn("tar", ["-zxf", "-", "-C", "./tmp"]);
     tar.stdout.pipe(process.stderr);
