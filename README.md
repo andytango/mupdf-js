@@ -144,4 +144,4 @@ Returns: *array of found rectangles of text matches ({x: number, y: number, w: n
 
 # License
 
-AGPL, subject to the [MuPDF license](https://www.mupdf.com/license.html).
+AGPL, subject to the [MuPDF license](https://www.mupdf.com/licensing/).
