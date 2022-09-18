@@ -14,7 +14,8 @@
     "build:tsc": "tsc -p tsconfig.json",
     "build:cp": "cp ./src/libmupdf.d.ts ./dist",
     "build:examples": "ts-node ./bin/build-examples.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "pdf",
@@ -27,13 +28,18 @@
   "devDependencies": {
     "@types/dockerode": "^2.5.33",
     "@types/emscripten": "^1.39.4",
+    "@types/jest": "^29.0.3",
     "@types/needle": "^2.0.4",
     "@types/node": "^14.0.22",
     "@types/rimraf": "^3.0.0",
+    "change-case": "^4.1.2",
     "dockerode": "^3.3.4",
+    "jest": "^29.0.3",
     "needle": "^2.5.0",
+    "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
+    "ts-jest": "^29.0.1",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
+    "typescript": "^4.8.3"
   }
 }
