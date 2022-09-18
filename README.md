@@ -143,6 +143,8 @@ Arguments:
 
 Returns: *array of found rectangles of text matches ({x: number, y: number, w: number, h: number}[])*
 
+You should set `maxHits` to an appropriate level that a user would expect (for example 100), or allow users to set their own limit. Alternatively, if you want to allow effectively unlimited search hits (and risk running out of memory), you can set it to C's maximum unsigned 32-bit integer size, which is 4294967295.
+
 # License
 
 AGPL, subject to the [MuPDF license](https://www.mupdf.com/licensing/).
