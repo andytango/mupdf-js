@@ -24,6 +24,6 @@ export function forExamplePages(
   fn: (page: number) => void | Promise<void>
 ) {
   for (let page = 1; page <= TOTAL_PAGES; page++) {
-    it(`Page [${page} / 4] - ${msg}`, async () => fn(page));
+    it(`Page [${page} / ${TOTAL_PAGES}] - ${msg}`, async () => fn(page));
   }
 }

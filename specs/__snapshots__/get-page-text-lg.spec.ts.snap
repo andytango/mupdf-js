@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`getPageText with large file Page [1 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [1 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 
 AVIK CHAUDHURI, Facebook Inc., USA
@@ -57,7 +57,7 @@ arXiv:1708.08021v2  [cs.PL]  30 Aug 2017
 "
 `;
 
-exports[`getPageText with large file Page [2 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [2 / 58] - should get the page text 1`] = `
 "2
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -119,7 +119,7 @@ are used quite widely (to manage actions and dispatchers, data and queries, etc.
 "
 `;
 
-exports[`getPageText with large file Page [3 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [3 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 3
 
@@ -242,7 +242,7 @@ file-sized chunks that can be assembled later. Fortunately, JavaScript is alread
 "
 `;
 
-exports[`getPageText with large file Page [4 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [4 / 58] - should get the page text 1`] = `
 "4
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -305,7 +305,7 @@ object-oriented features like this, methods, classes, and inheritance. These par
 "
 `;
 
-exports[`getPageText with large file Page [5 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [5 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 5
 
@@ -370,7 +370,7 @@ helps avoid unintentional capture of variables in exported closures.
 "
 `;
 
-exports[`getPageText with large file Page [6 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [6 / 58] - should get the page text 1`] = `
 "6
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -465,7 +465,7 @@ remaining sections we will keep these predicates abstract, but examples of these
 "
 `;
 
-exports[`getPageText with large file Page [7 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [7 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 7
 
@@ -542,7 +542,7 @@ exclude effect
 "
 `;
 
-exports[`getPageText with large file Page [8 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [8 / 58] - should get the page text 1`] = `
 "8
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -621,7 +621,7 @@ x : τ α to x : βα where β is a fresh type variable such that τ ≤ β ≤ 
 "
 `;
 
-exports[`getPageText with large file Page [9 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [9 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 9
 
@@ -706,7 +706,7 @@ of the initial type τ with P (Rule Ref-Single). The rules that handle the typic
 "
 `;
 
-exports[`getPageText with large file Page [10 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [10 / 58] - should get the page text 1`] = `
 "10
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -796,7 +796,7 @@ and the latter introduces a refinement from a runtime test p.
 "
 `;
 
-exports[`getPageText with large file Page [11 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [11 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 11
 
@@ -901,7 +901,7 @@ Whenever, a general type (exponent) is not made explicit, this means that it’s
 "
 `;
 
-exports[`getPageText with large file Page [12 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [12 / 58] - should get the page text 1`] = `
 "12
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -997,7 +997,7 @@ C ⊇ { null ≤ α8 }
 "
 `;
 
-exports[`getPageText with large file Page [13 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [13 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 13
 
@@ -1080,7 +1080,7 @@ updated through function calls (CG-Call) or are reassigned during conditional ty
 "
 `;
 
-exports[`getPageText with large file Page [14 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [14 / 58] - should get the page text 1`] = `
 "14
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1142,7 +1142,7 @@ C, in order to discover inconsistencies or prove the absence thereof.
 "
 `;
 
-exports[`getPageText with large file Page [15 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [15 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 15
 
@@ -1212,7 +1212,7 @@ updates that invalidate prior refinements.
 "
 `;
 
-exports[`getPageText with large file Page [16 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [16 / 58] - should get the page text 1`] = `
 "16
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1309,7 +1309,7 @@ along with all other expression forms introduced earlier.
 "
 `;
 
-exports[`getPageText with large file Page [17 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [17 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 17
 
@@ -1365,7 +1365,7 @@ safety, compared to the inference version of Section 3.
 "
 `;
 
-exports[`getPageText with large file Page [18 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [18 / 58] - should get the page text 1`] = `
 "18
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1486,7 +1486,7 @@ constraints over concrete types or effects. Since our type language has been kep
 "
 `;
 
-exports[`getPageText with large file Page [19 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [19 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 19
 
@@ -1554,7 +1554,7 @@ function types take string. However, it is unclear which choice of function type
 "
 `;
 
-exports[`getPageText with large file Page [20 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [20 / 58] - should get the page text 1`] = `
 "20
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1654,7 +1654,7 @@ accessing global definitions other than builtins is generally discouraged.
 "
 `;
 
-exports[`getPageText with large file Page [21 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [21 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 21
 
@@ -1714,7 +1714,7 @@ n and exported types
 "
 `;
 
-exports[`getPageText with large file Page [22 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [22 / 58] - should get the page text 1`] = `
 "22
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1778,7 +1778,7 @@ various stages of type checking, building on and extending Hack’s model [Hack 
 "
 `;
 
-exports[`getPageText with large file Page [23 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [23 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 23
 
@@ -1842,7 +1842,7 @@ syntax trees for corresponding files to shared memory.
 "
 `;
 
-exports[`getPageText with large file Page [24 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [24 / 58] - should get the page text 1`] = `
 "24
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -1954,7 +1954,7 @@ are around 686K annotations vs. 1502K other locations that could potentially be 
 "
 `;
 
-exports[`getPageText with large file Page [25 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [25 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 25
 
@@ -2014,7 +2014,7 @@ general more annotations are needed. Whenever type annotations are missing, they
 "
 `;
 
-exports[`getPageText with large file Page [26 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [26 / 58] - should get the page text 1`] = `
 "26
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -2077,7 +2077,7 @@ as Flow. SJS focuses mainly on taming legacy object-oriented features (construct
 "
 `;
 
-exports[`getPageText with large file Page [27 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [27 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 27
 
@@ -2136,7 +2136,7 @@ cation techniques [Fähndrich and Aiken 1996; Flanagan 1997]. To further improve
 "
 `;
 
-exports[`getPageText with large file Page [28 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [28 / 58] - should get the page text 1`] = `
 "28
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -2193,7 +2193,7 @@ reviewers for their valuable feedback on previous drafts of this paper.
 "
 `;
 
-exports[`getPageText with large file Page [29 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [29 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 29
 
@@ -2277,7 +2277,7 @@ Analysis of JavaScript Web Applications. In Proceedings of the 19th ACM SIGSOFT 
 "
 `;
 
-exports[`getPageText with large file Page [30 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [30 / 58] - should get the page text 1`] = `
 "30
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -2354,7 +2354,7 @@ A.K. Wright and M. Felleisen. 1994. A Syntactic Approach to Type Soundness. Inf.
 "
 `;
 
-exports[`getPageText with large file Page [31 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [31 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 31
 
@@ -2414,7 +2414,7 @@ and as in Pottier [1998, Proposition 1.3], τ ≤ τ ′ is equivalent to:
 "
 `;
 
-exports[`getPageText with large file Page [32 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [32 / 58] - should get the page text 1`] = `
 "32
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -2505,7 +2505,7 @@ with constraint satisfiability under ground substitution defined above.
 "
 `;
 
-exports[`getPageText with large file Page [33 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [33 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 33
 
@@ -2668,7 +2668,7 @@ top-levels.
 "
 `;
 
-exports[`getPageText with large file Page [34 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [34 / 58] - should get the page text 1`] = `
 "34
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -2839,7 +2839,7 @@ straint generation counterparts of Figure 5, and so are omitted here.
 "
 `;
 
-exports[`getPageText with large file Page [35 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [35 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 35
 
@@ -2985,7 +2985,7 @@ a bare evaluation context E and a typing of the filling expression e.
 "
 `;
 
-exports[`getPageText with large file Page [36 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [36 / 58] - should get the page text 1`] = `
 "36
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -3106,7 +3106,7 @@ types a stack X, L.E. Following the flow of execution the rule first checks the 
 "
 `;
 
-exports[`getPageText with large file Page [37 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [37 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 37
 
@@ -3196,7 +3196,7 @@ as the typing for stacks that we saw earlier.
 "
 `;
 
-exports[`getPageText with large file Page [38 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [38 / 58] - should get the page text 1`] = `
 "38
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -3288,7 +3288,7 @@ then
 "
 `;
 
-exports[`getPageText with large file Page [39 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [39 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 39
 
@@ -3404,7 +3404,7 @@ C = C0 ∪ {τ ≤ α }
 "
 `;
 
-exports[`getPageText with large file Page [40 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [40 / 58] - should get the page text 1`] = `
 "40
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -3510,7 +3510,7 @@ I. If ∆′ ≤ ∆, then
 "
 `;
 
-exports[`getPageText with large file Page [41 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [41 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 41
 
@@ -3615,7 +3615,7 @@ By (D.6.4) it holds that ∆0(y) = ∆′(y), and so by (D.6.6):
 "
 `;
 
-exports[`getPageText with large file Page [42 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [42 / 58] - should get the page text 1`] = `
 "42
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -3756,7 +3756,7 @@ S � ⟨H, X, L⟩, a target state S′ � ⟨H′, X, L′⟩ if, under a hea
 "
 `;
 
-exports[`getPageText with large file Page [43 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [43 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 43
 
@@ -3844,7 +3844,7 @@ By definition of ∆′, it holds that:
 "
 `;
 
-exports[`getPageText with large file Page [44 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [44 / 58] - should get the page text 1`] = `
 "44
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -3968,7 +3968,7 @@ By (D.7.11) we prove (b), (c) and (d).
 "
 `;
 
-exports[`getPageText with large file Page [45 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [45 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 45
 
@@ -4093,7 +4093,7 @@ e′ ≡ e′
 "
 `;
 
-exports[`getPageText with large file Page [46 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [46 / 58] - should get the page text 1`] = `
 "46
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -4241,7 +4241,7 @@ By (D.7.35) and (D.7.40):
 "
 `;
 
-exports[`getPageText with large file Page [47 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [47 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 47
 
@@ -4361,7 +4361,7 @@ By (D.7.43) and (D.7.44):
 "
 `;
 
-exports[`getPageText with large file Page [48 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [48 / 58] - should get the page text 1`] = `
 "48
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -4452,7 +4452,7 @@ S′ ≡ ⟨H′; X′; L′⟩
 "
 `;
 
-exports[`getPageText with large file Page [49 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [49 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 49
 
@@ -4571,7 +4571,7 @@ G (∆2)
 "
 `;
 
-exports[`getPageText with large file Page [50 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [50 / 58] - should get the page text 1`] = `
 "50
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -4669,7 +4669,7 @@ heap typing Σ′. Σ′ coincides with Σ on their common domain dom(L), so:
 "
 `;
 
-exports[`getPageText with large file Page [51 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [51 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 51
 
@@ -4792,7 +4792,7 @@ We examine the two non-overlapping domains separately:
 "
 `;
 
-exports[`getPageText with large file Page [52 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [52 / 58] - should get the page text 1`] = `
 "52
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -4928,7 +4928,7 @@ By (D.9.20) and (D.9.60):
 "
 `;
 
-exports[`getPageText with large file Page [53 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [53 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 53
 
@@ -5076,7 +5076,7 @@ X \\ X0
 "
 `;
 
-exports[`getPageText with large file Page [54 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [54 / 58] - should get the page text 1`] = `
 "54
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -5233,7 +5233,7 @@ L0 \\ L
 "
 `;
 
-exports[`getPageText with large file Page [55 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [55 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 55
 
@@ -5321,7 +5321,7 @@ We prove the desired by induction on the given derivation.
 "
 `;
 
-exports[`getPageText with large file Page [56 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [56 / 58] - should get the page text 1`] = `
 "56
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
@@ -5425,7 +5425,7 @@ G ⊩Σ H0, ℓ �→ ℓ′
 "
 `;
 
-exports[`getPageText with large file Page [57 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [57 / 58] - should get the page text 1`] = `
 "Fast and Precise Type Checking for JavaScript
 57
 
@@ -5509,7 +5509,7 @@ only impose very minimal preconditions for the respective transition to happen.
 "
 `;
 
-exports[`getPageText with large file Page [58 / 4] - should get the page text 1`] = `
+exports[`getPageText with large file Page [58 / 58] - should get the page text 1`] = `
 "58
 Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
 
