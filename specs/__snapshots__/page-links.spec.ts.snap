@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pageLinks Page [1 / 4] - should get the page links 1`] = `""`;
+
+exports[`pageLinks Page [2 / 4] - should get the page links 1`] = `""`;
+
+exports[`pageLinks Page [3 / 4] - should get the page links 1`] = `""`;
+
+exports[`pageLinks Page [4 / 4] - should get the page links 1`] = `
+"<area shape="rect" coords="100,100,261,128" href="http://google.com/">
+"
+`;

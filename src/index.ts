@@ -1,5 +1,6 @@
-import initMuPdf from "./libmupdf";
 import type { MuPdf } from "./libmupdf";
+import initMuPdf from "./libmupdf";
+
 export type { MuPdf } from "./libmupdf";
 
 export async function createMuPdf() {
