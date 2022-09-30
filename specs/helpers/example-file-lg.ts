@@ -1,9 +1,31 @@
 import { readFileSync } from "fs";
-import { createMuPdf } from "../../dist";
+import { createMuPdf, MuPdf } from "../../dist";
 
 const TOTAL_PAGES = 58;
 
-export async function loadExampleFile() {
+type ExampleFileHandler = { mupdf: MuPdf.Instance; doc: MuPdf.DocumentHandle };
+
+export function loadExampleFileSingleton() {
+  let instance = null as null | ExampleFileHandler;
+  let isLoading = false;
+
+  return async () => {
+    if (!instance) {
+      isLoading = true;
+      instance = await loadExampleFile();
+      isLoading = false;
+      return instance;
+    }
+
+    if (isLoading) {
+      throw new Error("File already being loaded");
+    }
+
+    return instance;
+  };
+}
+
+export async function loadExampleFile(): Promise<ExampleFileHandler> {
   const mupdf = await createMuPdf();
   const doc = mupdf.load(getExampleFile());
   return { mupdf, doc };
