@@ -1,7 +1,7 @@
-import type { MuPdf } from "./libmupdf";
-import initMuPdf from "./libmupdf";
+import type { MuPdf } from "./mupdf-wasm";
+import initMuPdf from "./mupdf-wasm";
 
-export type { MuPdf } from "./libmupdf";
+export type { MuPdf } from "./mupdf-wasm";
 
 export async function createMuPdf() {
   const muPdf = await initMuPdf();

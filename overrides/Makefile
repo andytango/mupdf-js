@@ -1,49 +1,55 @@
-MUPDF_JS := libmupdf.js
-MUPDF_WASM := libmupdf.wasm
+-include user.make
 
-SAMPLE_PDF := pdfref13.pdf
+build ?= release
 
-all: $(MUPDF_JS)
+EMSDK_DIR ?= /opt/emsdk
+BUILD_DIR ?= ../../build/wasm/$(build)
+WASM_SKIP_TRY_CATCH ?= 0
 
-EMSDK_DIR := /opt/emsdk
-MUPDF_CORE := ../../build/wasm/libmupdf.a ../../build/wasm/libmupdf-third.a
-$(MUPDF_CORE) : .FORCE
-	$(MAKE) -j4 -C ../.. \
-		OUT=wasm build=release \
-		XCFLAGS='-DTOFU -DTOFU_CJK -DFZ_ENABLE_SVG=0 -DFZ_ENABLE_HTML=0 -DFZ_ENABLE_EPUB=0 -DFZ_ENABLE_JS=0' \
-		generate
+ifeq ($(build),debug)
+  LIB_BUILD_FLAGS := -Os -g
+  BUILD_FLAGS := -Wall -O0 -g
+else ifeq ($(build),sanitize)
+  LIB_BUILD_FLAGS := -O2 -g -fsanitize=null
+  BUILD_FLAGS := -Wall -O0 -g -fsanitize=null -fsanitize=address -fsanitize=leak
+else
+  LIB_BUILD_FLAGS := -O2
+  BUILD_FLAGS := -Wall -Os -flto
+endif
+
+all: mupdf-wasm.js mupdf-wasm.wasm
+
+MUPDF_CORE := $(BUILD_DIR)/libmupdf.a $(BUILD_DIR)/libmupdf-third.a
+$(MUPDF_CORE): .FORCE
+	$(MAKE) -j4 -C ../.. generate
 	BASH_SOURCE=$(EMSDK_DIR)/emsdk_env.sh; \
 	. $(EMSDK_DIR)/emsdk_env.sh; \
 	$(MAKE) -j4 -C ../.. \
-		OS=wasm build=release \
-		XCFLAGS='-DTOFU -DTOFU_CJK -DFZ_ENABLE_SVG=0 -DFZ_ENABLE_HTML=0 -DFZ_ENABLE_EPUB=0 -DFZ_ENABLE_JS=0' \
+		OS=wasm build=$(build) \
+		XCFLAGS='$(LIB_BUILD_FLAGS) -DTOFU -DTOFU_CJK -DFZ_ENABLE_SVG=0 -DFZ_ENABLE_HTML=0 -DFZ_ENABLE_EPUB=0 -DFZ_ENABLE_JS=0 -DWASM_SKIP_TRY_CATCH=$(WASM_SKIP_TRY_CATCH)' \
 		libs
 
-wasm: $(MUPDF_JS) $(MUPDF_WASM)
-$(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
-	BASH_SOURCE=$(EMSDK_DIR)/emsdk_env.sh; . $(EMSDK_DIR)/emsdk_env.sh; \
-	emcc -Wall -O3 -o $@ \
-		-s WASM=1 \
+mupdf-wasm.js mupdf-wasm.wasm: $(MUPDF_CORE) lib/wrap.c
+	BASH_SOURCE=$(EMSDK_DIR)/emsdk_env.sh \
+	. $(EMSDK_DIR)/emsdk_env.sh; \
+	emcc -o $@ $(BUILD_FLAGS) \
+		--no-entry \
+		-D WASM_SKIP_TRY_CATCH=$(WASM_SKIP_TRY_CATCH) \
 		-s VERBOSE=0 \
-		-s INITIAL_MEMORY=750MB \
+		-s ABORTING_MALLOC=0 \
 		-s ALLOW_MEMORY_GROWTH=1 \
-		-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap", "FS"]' \
+		-s WASM=1 \
 		-s MODULARIZE=1 \
-		-s 'EXPORT_NAME="mupdf"' \
+		-s EXPORT_NAME='"libmupdf"' \
+		-s EXPORTED_RUNTIME_METHODS='["ccall","cwrap", "UTF8ToString","lengthBytesUTF8","stringToUTF8"]' \
+		-s EXPORTED_FUNCTIONS='["_malloc","_free"]' \
 		-I ../../include \
-		--pre-js wrap.js \
-		wrap.c \
-		../../build/wasm/release/libmupdf.a \
-		../../build/wasm/release/libmupdf-third.a
-
-run: $(SAMPLE_PDF) $(MUPDF_JS) $(MUDPF_WASM)
-	(sleep 3; xdg-open http://127.0.0.1:8000/view-page.html) &
-	python3 -m http.server 8000
+		lib/wrap.c \
+		$(BUILD_DIR)/libmupdf.a \
+		$(BUILD_DIR)/libmupdf-third.a
 
 clean:
-	rm -f $(MUPDF_JS) $(MUPDF_WASM)
-
-nuke: clean
-	$(MAKE) -C ../../ OS=wasm build=release clean
+	rm -f mupdf-wasm.js mupdf-wasm.wasm mupdf-wasm.worker.js
+	$(MAKE) -C ../../ OS=wasm build=$(build) clean
 
 .PHONY: .FORCE clean

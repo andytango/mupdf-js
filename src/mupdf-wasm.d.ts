@@ -13,12 +13,12 @@ export namespace MuPdf {
     h: number;
   }
 
-  interface Instance extends Module {
+  export interface Instance extends Module {
     load(fileData: Buffer | ArrayBufferView, name?: string): DocumentHandle;
   }
 
-  interface Module extends EmscriptenModule {
-    FS: typeof FS;
+  export interface Module extends EmscriptenModule {
+    
 
     openDocument(filename: string): DocumentHandle;
 

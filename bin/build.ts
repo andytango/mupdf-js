@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import Docker from "dockerode";
-import { createWriteStream } from "fs";
+import { createWriteStream, WriteStream } from "fs";
 import { resolve } from "path";
 import { Stream } from "stream";
 
@@ -26,7 +26,7 @@ async function runDockerBuildCommand() {
       HostConfig: {
         AutoRemove: true,
         Binds: [
-          `${resolve(`./tmp/mupdf-${MUPDF_VERSION}-source`)}:/src`,
+          `${resolve(getMuPdfSourcesRoot())}:/src`,
           `${resolve(`.`)}:/opt/mupdf-js`,
         ],
       },
@@ -50,6 +50,16 @@ function pullImage(docker: Docker) {
 
 function getDockerClient() {
   return new Docker();
+}
+
+function getMuPdfSourcesRoot() {
+  if(process.env.USE_MUPDF_MASTER === "true") {
+    console.log("Using MuPDF next");
+    return `./tmp/mupdf-master`;
+  }
+
+  console.log(`Using MuPDF stable ${MUPDF_VERSION}`);
+  return `./tmp/mupdf-${MUPDF_VERSION}-source`;
 }
 
 main();

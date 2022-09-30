@@ -12,7 +12,7 @@
     "build:prep": "ts-node ./bin/prep.ts",
     "build:wasm": "ts-node ./bin/build.ts",
     "build:tsc": "tsc -p tsconfig.json",
-    "build:cp": "cp ./src/libmupdf.d.ts ./dist",
+    "build:cp": "cp ./src/mupdf-wasm.d.ts ./dist",
     "build:examples": "ts-node ./bin/build-examples.ts",
     "test": "jest",
     "test:watch": "jest --watch"
