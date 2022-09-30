@@ -29,6 +29,7 @@ If applicable, add screenshots to help explain your problem.
  - OS Version: [e.g. Ubuntu Bionic, Debian Bullseye, MacOS 12.6, Windows 8]
  - Browser (or Node) [e.g. chrome, safari, node]
  - Browser (or Node) version: [e.g. v105, v15.6, v16.17.1]
+ - Architecture: [e.g. AMD64, ARM64v8]
 
 **Smartphone (please complete the following information):**
  - Device: [e.g. iPhone6]
