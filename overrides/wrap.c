@@ -231,9 +231,10 @@ char *outlineTitle(fz_outline *node)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int outlinePage(fz_outline *node)
+int outlinePage(fz_document *doc, fz_outline *node)
 {
-	return node->page + 1;
+  fz_location next = fz_next_page(ctx, doc, node->page);
+  return fz_page_number_from_location(ctx, doc, next);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -268,12 +269,13 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
 {
     fz_buffer *buf;
     fz_quad hits[maxHits];
+    int hit_marks[maxHits];
 
     if (maxHits <= 0) {
         return NULL;
     }
 
-    int count = fz_search_page_number(ctx, doc, number - 1, searchString, hits, maxHits);
+    int count = fz_search_page_number(ctx, doc, number - 1, searchString, hit_marks, hits, maxHits);
 
     buf = fz_new_buffer(ctx, 256);
 
@@ -285,7 +287,7 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
         y = hit.ul.y;
         w = hit.lr.x - x;
         h = hit.lr.y - y;
-        sprintf(quadStr, "%.6f;%.6f;%.6f;%.6f\n", x ,y ,w ,h);
+        sprintf(quadStr, "%.6f;%.6f;%.6f;%.6f;%u\n", x ,y ,w ,h, hit_marks[i]);
         fz_append_string(ctx, buf, quadStr);
     }
 

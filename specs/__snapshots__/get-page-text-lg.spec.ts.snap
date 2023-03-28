@@ -1,0 +1,5542 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getPageText with large file Page [1 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+
+AVIK CHAUDHURI, Facebook Inc., USA
+PANAGIOTIS VEKRIS, University of California, San Diego, USA
+SAM GOLDMAN, Facebook Inc., USA
+MARSHALL ROCH, Facebook Inc., USA
+GABRIEL LEVI, Facebook Inc., USA
+
+In this paper we present the design and implementation of Flow, a fast and precise type checker for JavaScript
+that is used by thousands of developers on millions of lines of code at Facebook every day. Flow uses
+sophisticated type inference to understand common JavaScript idioms precisely. This helps it find non-trivial
+bugs in code and provide code intelligence to editors without requiring significant rewriting or annotations from
+the developer. We formalize an important fragment of Flow’s analysis and prove its soundness. Furthermore,
+Flow uses aggressive parallelization and incrementalization to deliver near-instantaneous response times.
+This helps it avoid introducing any latency in the usual edit-refresh cycle of rapid JavaScript development. We
+describe the algorithms and systems infrastructure that we built to scale Flow’s analysis.
+
+CCS Concepts: • Theory of computation → Type structures; Program analysis;
+
+Additional Key Words and Phrases: Type Systems, Type Inference, JavaScript
+
+1
+INTRODUCTION
+
+JavaScript is one of the most popular languages for writing web and mobile applications today. The
+language facilitates fast prototyping of ideas via dynamic typing. The runtime provides the means
+for fast iteration on those ideas via dynamic compilation. This fuels a fast edit-refresh cycle, which
+promises an immersive coding experience that is quite appealing to creative developers.
+However, evolving and growing a JavaScript codebase is notoriously challenging. Developers
+spend a lot of time debugging silly mistakes—like mistyped property names, out-of-order arguments,
+references to missing values, checks that never fail due to implicit conversions, and so on—and
+worse, unraveling assumptions and guarantees in code written by others. In many other languages,
+this overhead is mitigated by having a layer of types over the code and building tools for the
+developer that use type information. For example, types can be used to identify common bugs and
+to document interfaces of libraries. Our aim is to bring such type-based tooling to JavaScript.
+
+1.1
+Goals
+
+In this paper, we present the design and implementation of Flow, a static type checker for JavaScript
+we have built and have been using at Facebook for the past three years.
+The idea of using types to manage code evolution and growth in JavaScript (and related languages)
+is not new. In fact, several useful type systems have been built for JavaScript in recent years. The
+design and implementation of Flow are driven by the specific demands of real-world JavaScript
+development we have observed at Facebook and the industry at large.
+
+• The type checker must be able to cover large parts of the codebase without requiring too
+many changes in the code. Developers want precise answers to code intelligence queries (the
+type of an expression, the definition reaching a reference, the set of possible completions at a
+point). Relatedly, they want to catch a large number of common bugs with few false positives.
+
+arXiv:1708.08021v2  [cs.PL]  30 Aug 2017
+
+"
+`;
+
+exports[`getPageText with large file Page [2 / 58] - should get the page text 1`] = `
+"2
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+• The type checker must provide very fast responses, even on a very large codebase. Developers
+do not want any noticeable “compile-time” latency in their normal workflow, because that
+would defeat the whole purpose of using JavaScript.
+To meet these demands, we had to make careful choices and solve technical challenges in Flow
+that go beyond related existing systems.
+
+• We precisely model common JavaScript idioms that appear pervasively in a modern JavaScript
+codebase. For example, Flow understands the pattern x = x || 0 that, e.g., initializes an
+optional parameter x in a function body. Handling a case like this necessitates support for
+type refinements: the system needs to recognize that the assigned value will not be null
+or undefined, i.e., the type of the initial value of x must be refined to exclude falsy values.1
+
+(More examples are shown below.)
+
+• At the same time, we do not focus on reflection and legacy patterns that appear in a relatively
+small fraction (that is also usually stable and well-tested). Today, tools like Babel convert
+modern JavaScript to (the more low-level) ES5 executed on browsers. Flow focuses on
+analyzing the source, instead of the target, of such translations (unlike many previous efforts
+that address ES5, or the even more low-level, and therefore harder, ES3).
+
+• We modularize our constraint-based analysis and implement data structures, algorithms,
+and systems infrastructure for parallel computing, shared-memory communication, and
+incremental updates to scale to millions of lines of code while answering most queries in
+well under a second.
+
+1.2
+Overview
+
+We now introduce the main ideas behind Flow’s design and implementation. (A full description of
+Flow is not possible due to space constraints.)
+
+Precise type checking. One of the main contributors of Flow’s precision is path-sensitivity: the
+way types interact with runtime tests. The essence of many JavaScript idioms is to put together ad
+hoc sets of runtime values and to take them apart with shallow, structural (in)equality checks. In
+Flow, the set of runtime values that a variable may contain is described by its type, and a runtime
+test on that variable refines the type to a smaller set. This ability turns out to be quite powerful and
+general in practice.
+In this paper, we formalize refinements in a core subset of JavaScript. The system is particularly
+interesting because of the combination of mutable local variables and closures that capture them by
+reference. Next, we illustrate this system via a series of examples (Figure 1).
+Higher-order functions (lines 1–4) are quite common in JavaScript. Unfortunately, it is also
+common to use null as a default for everything (line 4). In particular, this causes the dreaded “null
+is not a function” error to hit often. Fortunately, Flow finds these errors by following flows of null
+to calls in the code.
+Checking for nullability is the idiomatic way to prevent such errors at runtime. (In JavaScript,
+the check f != null is equivalent to f !== null && f !== undefined, which additionally rules
+out undefined, commonly used to denote missing values.) Thankfully Flow understands that this
+code is safe. It refines the type of f to filter out null in line 6, and thus knows that null cannot
+reach the call. Many other idiomatic variants also work, such as f && f(x), where f is checked to
+be truthy (ruling out null, undefined and other falsy values) before calling.
+Refinements also power a common technique to encode algebraic data types in JavaScript, which
+are used quite widely (to manage actions and dispatchers, data and queries, etc. in user interface
+
+1The values false, 0, "", null, undefined, and NaN are falsy. All other values are truthy.
+
+"
+`;
+
+exports[`getPageText with large file Page [3 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+3
+
+1
+function pipe(x, f) { f(x); }
+
+2
+var hello = (s) => console.log("hello", s);
+
+3
+pipe("world", hello);
+
+4
+pipe("hello", null); // error
+
+5
+function pipe(x, f) {
+
+6
+if (f != null) { f(x); } // ok
+
+7
+}
+
+8
+var nil = { kind: "nil" };
+
+9
+var cons = (head, tail) => {
+
+10
+return { kind: "cons", head, tail };
+
+11
+}
+
+12
+function sum(list) {
+
+13
+if (list.kind === "cons") {
+
+14
+return list.head + sum(list.tail); // ok
+
+15
+}
+
+16
+return 0;
+
+17
+}
+
+18
+sum(cons(6, cons(7, nil)));
+
+19
+function merge(x) {
+
+20
+x = x || nil;
+
+21
+return x.kind; // ok
+
+22
+}
+
+23
+function havoc(x) {
+
+24
+function reset() { x = null; }
+
+25
+x = x || nil;
+
+26
+reset();
+
+27
+return x.kind; // error
+
+28
+}
+
+Fig. 1. Modern JavaScript Examples
+
+libraries). Records of different shapes have a common property that specifies the “constructor,” and
+other properties dependent on the constructor value. These records are then analyzed by “pattern
+matching”—inspecting and branching on the constructor value.
+For example, consider the encoding of lists in lines 8–11. A sum function (line 12) checks whether
+a list is non-empty before accessing properties specific to non-empty lists. Following the calls
+to sum, Flow knows that the parameter list in line 12 can contain both kinds of objects—those
+whose kind property is "cons", and those for which it is "nil". The latter ones are filtered out
+by refining the type of list in line 13, so that the only objects reaching the property accesses of
+head and tail in line 14 are guaranteed to have those properties. Thus, Flow knows that this
+code is safe. Without refinements, on the other hand, the analysis would have over-conservatively
+concluded that nil can also flow to the property accesses, leading to spurious type errors.
+Refinements are tracked by a flow-sensitive analysis, and interact in interesting ways with
+variable assignment. The common idiom in line 20 of merge ensures that a variable has a non-null
+default. Flow models the assignment by merging the refined type of x with the type of nil and
+updating the type of x with it.
+On the other hand, refinements can be invalidated by assignments, which can even happen
+indirectly via calls (line 26). While invalidating refinements is necessary for soundness, they should
+be preserved as much as possible to avoid spurious type errors. Flow tracks variable assignments
+as effects for precise invalidation.
+Refinements and their invalidation carry over to higher-order functions. We also have limited
+support for refining mutable object properties, but those refinements are invalidated aggressively
+(i.e., our analysis is not heap-sensitive).
+Behind the scenes, Flow relies on set-based analysis as a common low-level “assembly language”
+for encoding a wide variety of high-level analyses. Compared with pure unification, this affords far
+more precision, but is much less efficient (quasi-cubic vs. quasi-linear in program size). How do we
+scale such an analysis?
+
+Fast type checking. The key to Flow’s speed is modularity: the ability to break the analysis into
+file-sized chunks that can be assembled later. Fortunately, JavaScript is already written using files
+
+"
+`;
+
+exports[`getPageText with large file Page [4 / 58] - should get the page text 1`] = `
+"4
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+as modules, so we modularize our analysis simply by asking that modules have explicitly typed
+signatures. (We still infer types for the vast majority of code “local” to modules.) Coincidentally,
+developers consider this good software engineering practice anyway.
+With modularity, we can aggressively parallelize our analysis. Furthermore, when files change,
+we can incrementally re-analyze only those files that depend on the changed files, and avoid
+re-analysis when their typed signatures have not changed. Together, these choices have helped
+scale the analysis to millions of lines of code.
+Under the hood, Flow relies on a high-throughput low-latency systems infrastructure that
+enables distribution of tasks among parallel workers, and communication of results in parallel
+via shared memory. Combined with an architecture where the analysis of a codebase is updated
+automatically in the background on file system changes, Flow delivers near-instantaneous feedback
+as the developer edits and rebases code, even in a large repository.
+
+1.3
+Contributions
+
+Overall, this paper (and our work on Flow) shows how, through careful design and implementation,
+type checking for JavaScript can be both extremely fast and precise enough in practice. We make
+the following contributions.
+
+(1) We identify a lightweight form of type refinement as a crucial feature for supporting a variety
+of common JavaScript idioms in practice. We formalize inference to support refinements in a
+core fragment of JavaScript containing higher-order functions, mutable variables, runtime
+tests, and capture-by-reference. Knowing when to invalidate a refinement can be quite
+tricky in this setting (Sections 3.1 and 3.2). To the best of our knowledge, no prior work
+has formalized this subset of features in a type inference for JavaScript. We also discuss
+our implementation of type inference as a system of set-based constraints combined with
+unification for optimization (Section 3.4). We define a runtime semantics (Section 4) and
+prove our system safe (Section 5) with respect to it.
+
+(2) We show how our inference system can be extended to check type annotations. Union types
+introduce some interesting complications (Section 6). We then identify a lightweight way
+to use type annotations to modularize our analysis, piggybacking on existing best practices
+in JavaScript development such as breaking a codebase into several small modules and
+documenting types at their boundaries (Section 7).
+
+(3) We show how we can exploit modularity and dependency management to make Flow
+responsive at scale. We describe an algorithm for parallelizing and incrementally updating
+the analysis when files change (Section 8). We describe how we extend an existing system
+infrastructure for parallel computation and communication, and implement our algorithms
+on it to achieve high throughput and low latency (Section 9).
+
+(4) We perform a thorough experimental evaluation of Flow on a codebase with millions of
+lines of JavaScript. Through key metrics we demonstrate the behavior of various stages of
+type checking at scale, and validate our hypotheses on the precision gained by refinement
+tracking and our low annotation footprint. (Section 10).
+
+We conclude with a discussion of related work (Section 11) and of limitations and threats to
+validity (Section 12).
+
+2
+LANGUAGE FLOWCORE
+We consider a minimal subset of JavaScript that includes functions, mutable variables, primitive
+values and records. Notably, we leave out data structures like dictionaries and arrays, as well as
+object-oriented features like this, methods, classes, and inheritance. These parts of the language
+
+"
+`;
+
+exports[`getPageText with large file Page [5 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+5
+
+Expressions
+e
+::=
+x | n | x =e | (x) ⇒ {s; return e} | e1(e2)
+|
+{f1:e1, . . . , fn:en} | e.f | e1.f = e2
+|
+p(x) | e1 &&e2 | e1 ||e2 | !e
+
+Statements
+s
+::=
+e | var x =e | if (e) {s1} else {s2} | s1;s2 | skip
+
+Fig. 2. FlowCore Syntax
+
+are mostly orthogonal to understanding refinements. Their type inference, while interesting, is
+built on the same foundations, and behave more or less similarly to previous work—we can safely
+extend our model to include them, without significantly complicating our guarantees. Our focus is
+on formalizing type inference and refinement strengthening, with the exception of refinements on
+mutable fields that are not tracked through the heap. While compact, this fragment is expressive
+enough to model the examples of Section 1—which illustrate how Flow uses predicate refinements
+to reduce false positives, while remain sound with respect to variable updates.
+
+2.1
+Syntax
+
+Figure 2 describes the language of expressions e and statements s. Here, n represents constants, and
+x and y range over program variables.
+
+Expressions. We elide primitive operations (which may include arithmetic operations). Constants
+include, e.g., numbers, strings, and undefined. The syntax p(x) draws from a fixed, possibly infinite
+set of unary predicates p on x. These model dynamic checks, such as typeof x === "number",
+x === undefined, x (testing if an expression is truthy), or model tests like x.f === "nil" on
+records. Note that in this system the last check does not imply a predicate on the value of x.f, but
+rather on x itself. The former would be a heap refinement, which Flow only supports in a limited
+fashion, and which is excluded from the formalism.
+General-purpose functions (using the keyword function) are complicated in JavaScript: they
+can be additionally used as methods and as constructors. To simplify our exposition, we restrict our
+attention to arrow functions (essentially lambdas). We assume that a function body consists of a
+statement followed by the return of an expression. Functions that do not explicitly return anything
+can be thought of as implicitly returning undefined. (Flow’s treatment of abnormal control flows
+via return is also interesting, but we omit it here.) We also include the logical conjunction (&&),
+disjunction (||) and negation (!) operators, as they are pervasive in JavaScript and inform our
+refinement strategy.
+
+Statements. We use var to introduce variables, and include statements for conditional execution
+and sequencing. We omit const because it is much simpler than var, since refinements never
+need to be invalidated. We also omit let-bound variables. Their main difference with var-bound
+variables is in scoping rules, so handling them does not add any insight to our type system overview.
+Finally, we omit while; although it can be encoded with if and recursion, Flow’s treatment of it is
+more precise.
+
+Assumption. We assume an α-renaming pre-pass over the program’s AST that guarantees that
+each variable definition point (which is either a var statement or an arrow definition) introduces a
+unique variable identifier. This is a fairly straightforward transformation for any preprocessor that
+helps avoid unintentional capture of variables in exported closures.
+
+"
+`;
+
+exports[`getPageText with large file Page [6 / 58] - should get the page text 1`] = `
+"6
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Type Vars
+α, β,γ,δ
+∈
+V
+
+Type Literals
+ˆτ
+::=
+b | α
+ε−→ τ | {f1 : α1, . . . , fn : αn}
+
+Types
+τ
+::=
+ˆτ | τ1 ⊔ τ2 | α
+
+Effect Vars
+ω
+∈
+E
+
+Effect Literals
+ˆε
+::=
+⊥ | x
+
+Effects
+ε
+::=
+ˆε | ε1 ⊔ ε2 | ω
+
+Type Uses
+uτ
+::=
+α | Call(τ
+ω−→ α) | Get ({f : α}) | Set ({f : τ }) | Pred(P, α)
+
+Effect Uses
+uε
+::=
+ω | Havoc (Γ)
+
+Predicates
+P
+::=
+p | ¬p
+
+Constraints
+c
+::=
+τ ≤ uτ | ε ≤ uε
+
+Fig. 3. FlowCore Type, Effect and Constraint Syntax
+
+2.2
+Types, Effects and Constraints
+
+The basic ingredients of our constraint system are types τ and effects ε. Their syntax is described in
+Figure 3.
+
+Types. Types are ranged over by variables α, β, etc. taken from an enumerable set V. The building
+blocks for constructing complex type structures are type literals ˆτ. These include primitive types b
+(e.g., number, string, and void for undefined), arrow types α
+ε−→ τ for functions, and record types
+{f1 : α1, . . . , fn : αn}. Arrow types are annotated with an effect ε which describes a set of names x
+that may be assigned in the function’s body or transitively in code that is executed when calling
+this function. A more proper introduction of effects follows. Types also feature a binary operator ⊔
+denoting the union of types.
+
+Effects. The effect we are interested in tracking here is variable updates. Each language term is
+associated with an effect, as we will see later in constraint generation. This is (roughly) the set of
+variables that are (re)assigned within this term. The base constructors of effects are the empty effect
+⊥ and variable symbols x, corresponding to the variables that are updated. Like types, effects also
+feature a binary operator ⊔ denoting union of effects. Finally, effects are ranged over by variables
+ω taken from an enumerable set E.
+
+Environments. An environment Γ binds variables x to entries τ α, meaning that its most recent
+assignment was of type τ, whereas the type variable α is used as the collective summary for all
+its (past, current, and future) assignments. Here τ is flow-sensitive—its value may change from
+one (flow-sensitive) environment to another—whereas α is invariant. We also distinguish between
+environment extension—denoted Γ, x : τ α (variable x is not bound in the original environment Γ),
+and environment update—denoted Γ[x �→ τ α ] (variable x was bound in Γ).
+
+Predicates. Key to our type refining process is the notion of predicates. A predicate P is a clause
+denoting a property of its implied argument. In our setting, syntactically it can be a base predicate
+p or its negation. Base predicates describe properties of constructed or primitive types. For the
+remaining sections we will keep these predicates abstract, but examples of these predicates are
+
+"
+`;
+
+exports[`getPageText with large file Page [7 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+7
+
+the ones implied by checks of the form typeof ⋆ === "string", typeof ⋆ === "number",
+⋆.f === "null", etc., where ⋆ is to be filled in with a program variable.
+
+Constraints. A constraint c is a “flow” from a type τ (resp. effect ε) to a type use uτ (resp. an
+effect use uε). Flows from types to type uses generalize the notion of subtyping. However, we
+chose to enforce some structural restrictions to the forms that can appear on the right-hand side
+of constraints, namely the uses. Type and effect variables can appear as uses themselves. We do
+not allow general types and effects to appear as uses. Instead they are wrapped by constructors
+that contain information about the operations that caused the generation of such constraints.
+Uses account for data flow through function calls (Call), object operations (Get, Set), control flow
+refinement (Pred), and refinement invalidation (Havoc).
+The use Call(τ
+ω−→ α) corresponds to a function call with argument type τ, resulting in type
+α; the effect variable ω models the effect of the target function. A constraint τ ′ ≤ Call(τ
+ω−→ α)
+looks up the parameter, return, and effect of τ ′ and propagates τ to the parameter, the return to α,
+and the effect to ω. The uses for reading and writing to a field, Get ({f : α}) and Set ({f : τ }), are
+straightforward. A constraint τ ′ ≤ Get ({f : α}) (resp. τ ′ ≤ Set ({f : τ })) looks up the field f of τ ′
+
+and propagates the result to α (resp. τ to the result). The use Pred(P, α) is used to refine an incoming
+type using predicate P, resulting in fresh type variable α. In other words, a constraint τ ≤ Pred(P, α)
+will only allow the parts of τ that satisfy P to flow to α. Finally, for refinement invalidation we
+introduce Havoc, which takes an environment argument Γ. A constraint x ≤ Havoc (Γ) says that
+the variable x may be updated, so that any refinement involving x in Γ must be invalidated. This
+will be discussed later on in greater detail (Section 3.2).
+
+3
+CONSTRAINT SYSTEM
+We present the static semantics of our formal fragment by means of a constraint generating type
+inference scheme. Our constraints encode type safety obligations that arise as values flow to
+operations throughout the program.
+
+3.1
+Constraint Generation
+
+The core type inference judgments for expressions and statements in FlowCore are:
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+Γ ⊢ s : ε ⊣ Γ′ ▷ C
+
+The derivation of a judgment relies on a set of constraints C as proof obligations, which appear on
+the right of the ▷ symbol. We use ∪ for the union of two constraint sets and � for the union of
+a number of constraint sets ranged over by the index in the subscript of the arguments set (e.g.,
+�k
+i=1 Ci). For both expressions and statements this judgment is flow-sensitive which is achieved by
+introducing an output environment Γ′, in addition to the input environment Γ. The set of variable
+names assigned in e or s is modeled by ε. The case of expressions has two additional byproducts: a
+type τ and a predicate mapping ψ. The latter includes bindings from names to predicates that must
+hold when e is truthy, and symbolic operations over them (explained later):
+
+ψ
+::=
+∅
+empty mapping
+|
+x �→ P
+variable binding
+|
+ψ1 ∧ψ2
+conjunction
+|
+ψ1 ∨ψ2
+disjunction
+|
+¬ψ
+negation
+|
+ψ\\ε
+exclude effect
+
+"
+`;
+
+exports[`getPageText with large file Page [8 / 58] - should get the page text 1`] = `
+"8
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Expression Constraint Generation
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ⊢ n: bn; ⊥; ∅ ⊣ Γ ▷ ∅
+[CG-Const]
+Γ(x) = τ α
+
+Γ ⊢ x : τ; ⊥; x �→ truthy ⊣ Γ ▷ ∅
+[CG-Var]
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+Γ′(x) = τ0α
+
+Γ ⊢ x =e : τ; ε ⊔ x; ψ\\x ⊣ Γ′[x �→ τ α ] ▷ C ∪ {τ ≤ α }
+[CG-Assign]
+
+xi = locals(s)
+α,αi fresh
+Γ1 = erase(Γ), x : αα, xi : voidαi
+Γ1 ⊢ {s; return e} : τ; ε ⊣ Γ2 ▷ C
+
+Γ ⊢ (x) ⇒ {s; return e}: α
+ε\\x,xi
+−−−−−→ τ; ⊥; ∅ ⊣ Γ ▷ C
+
+[CG-Fun]
+
+Γ ⊢ e1 : τ1; ε1; ψ1 ⊣ Γ1 ▷ C1
+Γ1 ⊢ e2 : τ2; ε2; ψ2 ⊣ Γ2 ▷ C2
+α,ω fresh
+widen(Γ2) = Γ3 ▷ C3
+ε1 ⊔ ε2 ⊔ ω = ε
+C1 ∪ C2 ∪ C3 ∪
+�
+ω ≤ Havoc (Γ3) , τ1 ≤ Call(τ2
+ω−→ α)
+�
+= C
+
+Γ ⊢ e1(e2): α; ε; ∅ ⊣ Γ3 ▷ C
+[CG-Call]
+
+Fig. 4. Expression Constraint Generation in FlowCore (Variables and Functions)
+
+Below we describe constraint generation in more detail, starting from rules handling variables,
+functions, and calls (Figure 4).
+
+Variables. The rules for reading and assigning a local variable (CG-Var and CG-Assign) involve
+looking up and updating the current type for the variable in the outgoing environment. This part is
+what makes this system flow-sensitive. A flow-insensitive system would use a single environment
+for each judgment. The assigned type would be merged to the same type used for the variable
+under update in the first place, making it less precise. In addition, reading a variable introduces a
+truthy predicate on it. This is useful under specific contexts such as when the variable is used as
+the condition part of an if-branch. Conversely, writing a variable forgets any refinement coming
+from expression e that concerns x.
+
+Arrow Functions. Rule CG-Fun handles arrow functions by approximating the environment at the
+beginning with the flow-insensitive erasure of the current environment (since we do not know where
+this function will be called). The meta-function erase computes this new environment by mapping
+each x : τ α to x : αα (Figure 5). In addition, to capture the hoisting of variables defined within
+the scope of the function to the beginning of the function body, we introduce the meta-function
+locals that takes as argument a statement s and returns all variable identifiers xi declared in s. Each
+variable xi is bound to the undefined type void (and a fresh general type αi), since its definition
+is hoisted to the top of the function body and initialized to undefined. The inferred arrow type
+carries the effect ε of the body of the function. Note that we are removing the formal parameter x
+and local variables xi from the effect as they are only visible within the body of the defined arrow.
+
+Calls. Rule CG-Call handles calls. We approximate the outgoing environment with a flow-
+sensitive widening of the current environment (instead of pessimistically erasing everything in
+scope). The meta-function widen (Figure 5) computes this new environment Γ′ by mapping each
+x : τ α to x : βα where β is a fresh type variable such that τ ≤ β ≤ α. For any variable x that gets
+
+"
+`;
+
+exports[`getPageText with large file Page [9 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+9
+
+Auxiliary Functions
+erase(Γ) = Γ′
+widen(Γ) = Γ′ ▷ C
+
+erase(·) = ·
+[T-Erase-E]
+erase(Γ) = Γ′
+
+erase(Γ, x : τ α) = Γ′, x : αα [T-Erase-C]
+
+widen(·) = · ▷ ∅
+[T-Widen-E]
+widen(Γ) = Γ0 ▷ C0
+β fresh
+
+widen(Γ, x : τ α) = Γ0, x : βα ▷ C0 ∪ {τ ≤ β, β ≤ α }
+[T-Widen-C]
+
+Auxiliary Environment Operations
+Γ1 ⊔ Γ2 = Γ
+Γ :: ψ = Γ′ ▷ C
+
+· ⊔ · = ·
+[Env-Join-E]
+Γ1 ⊔ Γ2 = Γ
+
+(Γ1, x : τ1α) ⊔ (Γ2, x : τ2α) = Γ, x : (τ1 ⊔ τ2)α [Env-Join-C]
+
+Γ :: ∅ = Γ ▷ ∅
+[Ref-E]
+Γ(x) = τ α
+β fresh
+
+Γ :: x �→ P = Γ[x �→ βα ] ▷ {τ ≤ Pred(P, β) }
+[Ref-Single]
+
+Γ :: ψ1 = Γ1 ▷ C1
+Γ1 :: ψ2 = Γ2 ▷ C2
+
+Γ :: (ψ1 ∧ψ2) = Γ2 ▷ C1 ∪ C2
+[Ref-And]
+Γ :: ψ1 = Γ1 ▷ C1
+Γ :: ψ2 = Γ2 ▷ C2
+
+Γ :: (ψ1 ∨ψ2) = Γ1 ⊔ Γ2 ▷ C1 ∪ C2
+[Ref-Or]
+
+Γ :: ψ = Γ1 ▷ C1
+widen(Γ1) = Γ2 ▷ C2
+Γ3 = { x : βτ | x : τ α ∈ Γ, x : βα ∈ Γ2 }
+
+Γ :: ψ\\ε = Γ2 ▷ C1 ∪ C2 ∪ { ε ≤ Havoc (Γ3) }
+[Ref-Effect]
+
+Fig. 5. Auxiliary Functions for Function Logistics and Environment Operations in FlowCore
+
+assigned during the function call, we must fall back to its erasure, i.e., we must flow α to β. For
+now this is achieved by flowing the effect ω of the call to Havoc (Γ′). The actual erasure happens
+later at constraint propagation (Section 3.2), when the type of the receiver function is known and
+the incoming effect is no longer abstract. As we show in Section 3.2, when a function type flows
+to Call(τ2
+ω−→ α), the effect ω is instantiated with the actual effect variables x carried over by the
+incoming function type. These variables trigger the erasure.
+
+Environment Operations. Before delving into the remaining typing rules, we introduce some
+operations on environments (Figure 5).
+Ther first one is environment join (⊔), a commutative operator that computes the least upper
+bound of a pair of environments with the same domain. Type entries bound to the same symbol in
+the input environments need to refer to the same program variable. This requirement allows us to
+assume that the general type of a variable x bound in both environments will be the same.
+The next operation we define is environment refinement (::). The semantics of a refinement ψ is
+defined by how it refines environments through the constraint-producing judgment Γ :: ψ = Γ′ ▷ C,
+where an environment Γ is strengthened by the predicates in ψ and result in an environment Γ′,
+potentially including fresh variables that are constrained in C. When ψ is x �→ P, we update the
+relevant binding in the environment Γ to a fresh type β that is the result of the predicate refinement
+of the initial type τ with P (Rule Ref-Single). The rules that handle the typical logical operators
+(Ref-And and Ref-Or) are straightforward.
+
+"
+`;
+
+exports[`getPageText with large file Page [10 / 58] - should get the page text 1`] = `
+"10
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Expression Constraint Generation
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ⊢ e1 : τ1; ε1; ψ1 ⊣ Γ1 ▷ C1
+Γ1 :: ψ1 = Γ′
+1 ▷ C2
+Γ′
+1 ⊢ e2 : τ2; ε2; ψ2 ⊣ Γ2 ▷ C3
+α1 fresh
+(ψ1\\ε2) ∧ψ2 = ψ
+Γ1 :: ¬ψ1 = Γ′′
+1 ▷ C4
+Γ′′
+1 ⊔ Γ2 = Γ′
+
+Γ ⊢ e1 &&e2 : α1 ⊔ τ2; ε1 ⊔ ε2; ψ ⊣ Γ′ ▷
+
+�4
+
+i=1Ci ∪ {τ1 ≤ Pred(falsy, α1) }
+[CG-And]
+
+Γ ⊢ e1 : τ1; ε1; ψ1 ⊣ Γ1 ▷ C1
+Γ1 :: ¬ψ1 = Γ′
+1 ▷ C2
+Γ′
+1 ⊢ e2 : τ2; ε2; ψ2 ⊣ Γ2 ▷ C3
+α1 fresh
+(ψ1\\ε2) ∨ψ2 = ψ
+Γ1 :: ψ1 = Γ′′
+1 ▷ C4
+Γ′′
+1 ⊔ Γ2 = Γ′
+
+Γ ⊢ e1 ||e2 : α1 ⊔ τ2; ε1 ⊔ ε2; ψ ⊣ Γ′ ▷
+
+�4
+
+i=1Ci ∪ {τ1 ≤ Pred(truthy, α1) }
+[CG-Or]
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ⊢ !e : bool; ε; ¬ψ ⊣ Γ′ ▷ C
+[CG-Not]
+Γ ⊢ p(x): bool; ⊥; x �→ p ⊣ Γ ▷ ∅
+[CG-Pred]
+
+Fig. 6. Expression Constraint Generation in FlowCore (Logical Operations)
+
+Refinements can be invalidated by effects. In Rule Ref-Effect, we first refine Γ by ψ, and then
+apply the effect ε through the “havoc” mechanism on the resulting environment Γ1. There is a slight
+discrepancy in the way this mechanism is applied in this case compared to function calls, since we
+only want to revert the effect of the refinement caused by ψ, and not fall back to the most general
+type. If “havoc” is triggered, then for every variable x bound in Γ3, that happens to reach effect ε, we
+only flow type τ (that x was bound to in Γ before the refinement) to β, instead of the most general
+type α. It appears here that we are locally breaking our invariant on the form of environments,
+by allowing entries with types τ in the place of the most general type summary (exponent). This
+is a benign violation of our restriction on environments since the constructed environment Γ3 is
+not used as the input environment in a type inference judgment, but rather as the argument to the
+“havoc” use. As we will see later, this context does not produce any flows towards τ. The use of an
+environment here is in fact a mere syntactic convenience.
+Finally, we can have refinements with logical connectives. The negation of x �→ p is simply
+x �→ ¬p. Otherwise, we push negations inward as much as possible, by applying the laws:
+
+¬(ψ1 ∧ψ2) = ¬ψ1 ∨ ¬ψ2
+¬(ψ\\ε) = ¬ψ\\ε
+
+¬(ψ1 ∨ψ2) = ¬ψ1 ∧ ¬ψ2
+¬(¬ψ) = ψ
+
+Logical operations. The rules of Figure 6 are interesting for their effect on predicate refinement. In
+Rule CG-And,e2 is analyzed under the refinementψ1 (since otherwise it would not be evaluated). The
+type inferred for the entire expression contains components from both e1 and e2. From the former it
+contains type α1 that is a version of τ1 refined by the falsy predicate, since it corresponds to the case
+where e1 is actually falsy. From the latter it includes the type τ2 as is. For the output environment
+we follow a similar strategy. The component that corresponds to e1’s output environment will be
+refined with ¬ψ1, since otherwise we would be using the environment corresponding to e2. With
+respect to the output predicate mapping, parts ofψ1 that apply on names written in e2 are forgotten
+when taking the conjunction withψ2. Rule CG-Or is the dual of the above rule, and works similarly.
+Finally, rules CG-Not and CG-Pred are straightforward. The former just negates the refinement
+and the latter introduces a refinement from a runtime test p.
+
+"
+`;
+
+exports[`getPageText with large file Page [11 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+11
+
+Expression Constraint Generation
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ≡ Γ0
+∀i ∈ [1,n] . Γi−1 ⊢ ei : τi; εi; ψi ⊣ Γi ▷ Ci
+αi fresh
+
+Γ ⊢ {fi:ei}:
+�
+fi : αi
+�
+;
+
+�n
+
+i=1εi; ∅ ⊣ Γn ▷
+
+�n
+
+i=1Ci ∪
+
+�n
+
+i=1 {τi ≤ αi }
+
+[CG-Rec]
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+α fresh
+
+Γ ⊢ e.f: α; ε; ∅ ⊣ Γ′ ▷ C ∪ {τ ≤ Get ({f : α}) }
+[CG-FdRd]
+
+Γ ⊢ e1 : τ1; ε1; ψ1 ⊣ Γ1 ▷ C1
+Γ1 ⊢ e2 : τ2; ε2; ψ2 ⊣ Γ2 ▷ C2
+
+Γ ⊢ e1.f = e2 : τ2; ε1 ⊔ ε2; ∅ ⊣ Γ2 ▷ C1 ∪ C2 ∪ {τ1 ≤ Set ({f : τ2}) }
+[CG-FdWr]
+
+Fig. 7. Expression Constraint Generation in FlowCore (Records)
+
+Statement Constraint Generation
+Γ ⊢ s : ε ⊣ Γ′ ▷ C
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ⊢ e : ε ⊣ Γ′ ▷ C
+[CG-Exp]
+Γ ⊢ x =e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+Γ ⊢ var x =e : ε ⊣ Γ′ ▷ C
+[CG-VarDecl]
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C1
+Γ′ :: ψ = Γ1 ▷ C2
+Γ1 ⊢ s1 : ε1 ⊣ Γ′
+1 ▷ C3
+Γ′ :: ¬ψ = Γ2 ▷ C4
+Γ2 ⊢ s2 : ε2 ⊣ Γ′
+2 ▷ C5
+Γ′
+1 ⊔ Γ′
+2 = Γ′′
+
+Γ ⊢ if (e) {s1} else {s2}: ε ⊔ ε1 ⊔ ε2 ⊣ Γ′′ ▷
+
+�5
+
+i=1Ci
+[CG-If]
+
+Γ ⊢ s1 : ε1 ⊣ Γ1 ▷ C1
+Γ1 ⊢ s2 : ε2 ⊣ Γ2 ▷ C2
+
+Γ ⊢ s1;s2 : ε1 ⊔ ε2 ⊣ Γ2 ▷ C1 ∪ C2
+[CG-Seq]
+
+Fig. 8. Statement Constraint Generation in FlowCore
+
+Records. The rules of Figure 7 for record type inference are mostly routine. During record creation
+the initializer types flow to the newly constructed record literal type. Subsequent assignments of
+type τ to a field f widen the type of f by introducing flows to the use Set ({f : τ }).
+In practice, Flow follows a slightly stricter approach. It “fixes” the type of an object at initialization
+and checks that all subsequent writes adhere to this type. This essentially amounts to checking for
+type annotations which is out of scope in this section of type inference.
+
+Statements. The main difference compared to the respective expression rule is the omission of
+the assigned type and the refinement predicate. Rule CG-VarDecl reuses the rule for assignment
+that we saw earlier, since due to variable hoisting, x is already in scope. Rule CG-If handles
+conditional statements. This rule uses the refinement ψ for the conditional expression e to refine
+the environments that are used to check each branch, with the appropriate sign in each case. The
+output environment is the join of the environments at the end of each branch.
+
+Example
+We now examine how the rules of Figures 4 – 8 handle the code in lines 8 – 28 in Figure 1. In
+the following we keep the produced type bindings on the left and constraint sets on the right.
+Whenever, a general type (exponent) is not made explicit, this means that it’s not important for that
+
+"
+`;
+
+exports[`getPageText with large file Page [12 / 58] - should get the page text 1`] = `
+"12
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+particular binding. Also, to avoid clutter, we do not define a new environment for each program
+point, but rather introduce different versions for variables that get updated or refined.
+By applying Rule CG-Rec on line 8:
+
+nil: {kind : α1}
+C ⊇ { "nil" ≤ α1 }
+(1)
+
+Here, "nil" is the string literal type denoting the exact string "nil". For the function cons (lines 9 –
+11) we get
+
+cons: (α2, α3) → O
+C ⊇ { "cons" ≤ α4, α2 ≤ α5, α3 ≤ α6 }
+(2)
+
+where O � {kind : α4, head : α5, tail : α6}. We also define τcons � (α2, α3) → O. The function’s
+effect is empty, so omitted here. Moving on to function sum, before checking its body we introduce
+bindings for the (recursive) function itself and its parameter:
+
+sum: α7 → τr, list: α7
+(3)
+
+We define τsum � α7 → τr . Checking the conditional in line 13, list gets a more precise type, and
+is referred to as line1 inside the then-branch:
+
+list1 : β7
+C ⊇ { α7 ≤ Pred(pc, β7) }
+(4)
+
+Here, pc � ⋆.kind === "cons" is the predicate of exact equality of the field kind with the string
+"cons". The uses of list in line 14 produce the following constraints (here we focus on the
+interesting uses i.e., the two field accesses and the call):
+
+C ⊇
+
+
+
+
+β7 ≤ Get ({head : γ1}),
+β7 ≤ Get ({tail : γ2}),
+τsum ≤ Call(γ2 −→ δ1)
+
+
+
+
+
+(5)
+
+We omit the constraints pertinent to the return statements, since they are not crucial in this example.
+The compound calls in line 18 further produce the constraints (starting from deeper nesting levels):
+
+C ⊇ {τcons ≤ Call((number, {kind : α1}) −→ δ2) }
+(6)
+
+C ⊇ {τcons ≤ Call((number, δ2) −→ δ3) }
+(7)
+
+C ⊇ {τsum ≤ Call(δ3 −→ δ4) }
+(8)
+
+In function merge, let x1 correspond to the initial value for x and x2 to the value after the update in
+line 20. Below, the first three constraints correspond to the use of the || operator and the last one
+to the field access in line 21:
+
+x1 : α8α8, x2 : α11α8
+C ⊇
+
+
+
+
+α8 ≤ Pred(truthy, β8),
+β8 ⊔ τnil ≤ α11,
+α11 ≤ Get ({kind : α10})
+
+
+
+
+
+(9)
+
+Finally, function havoc in lines 23–28 is similar to merge (so we won’t repeat the common parts),
+but additionally, defines a function reset, that assigns null to x. Crucially, the type of x inside
+reset has been erased to α8:
+
+reset: ()
+x−→ void
+C ⊇ { null ≤ α8 }
+(10)
+
+"
+`;
+
+exports[`getPageText with large file Page [13 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+13
+
+{τ ≤ α, α ≤ uτ } ⊆ C =⇒ τ ≤ uτ ∈ C
+(CP-Trans-T)
+
+{ ε ≤ ω, ω ≤ uε } ⊆ C =⇒ ε ≤ uε ∈ C
+(CP-Trans-E)
+
+τ1 ⊔ τ2 ≤ uτ ∈ C =⇒ {τ1 ≤ uτ , τ2 ≤ uτ } ⊆ C
+(CP-Join-T)
+
+ε1 ⊔ ε2 ≤ uε ∈ C =⇒ { ε1 ≤ uε, ε2 ≤ uε } ⊆ C
+(CP-Join-E)
+
+α
+ε−→ τ ≤ Call(τ ′ ω−→ β) ∈ C =⇒ {τ ′ ≤ α, τ ≤ β, ε ≤ ω } ⊆ C
+(CP-Call)
+
+x ≤ Havoc (Γ, x : βα) ∈ C =⇒ α ≤ β ∈ C
+(CP-Havoc)
+
+ˆτ ≤ Pred(P, α) ∈ C ∧ check (ˆτ, P) =⇒ ˆτ ≤ α ∈ C
+(CP-P-Base)
+�
+τ ≤ α, τ ′⟨α⟩+ ≤ Pred(P, β)
+�
+⊆ C =⇒ τ ′⟨τ⟩+ ≤ Pred(P, β) ∈ C
+(CP-P-Trans)
+
+{. . . , f : α, . . . } ≤ Get ({f : β}) ∈ C =⇒ α ≤ β ∈ C
+(CP-Get)
+
+{. . . , f : α, . . . } ≤ Set ({f : τ }) ∈ C =⇒ τ ≤ α ∈ C
+(CP-Set)
+
+Fig. 9. Constraint Propagation in FlowCore
+
+The call to reset in line 26 needs to handle the function’s effect, so a fresh variable ω is generated:
+
+C ⊇
+�
+()
+x−→ void ≤ Call(()
+ω−→ void),
+ω ≤ Havoc (Γ[ x �→ α11α8 ])
+
+�
+(11)
+
+For the moment, we have merely constructed a flow network, but haven’t reached any critical
+conclusions. In the next section, we’ll see how we can use these facts to discover inconsistencies,
+and what guarantees we get if we do not find any.
+
+3.2
+Propagation
+
+Thinking of our system as a dataflow analysis framework, constraint generation amounts to setting
+up a flow network. The next step is to allow the system to stabilize under a set of appropriate
+flow functions. This latter part is called constraint propagation and corresponds to exploring all
+potential data-flow paths and finding inconsistencies in them. Decomposing complex constraints
+intro simpler ones is done by the rules shown in Figure 9. We say that a constraint set C is in closed
+form, if it is closed with respect to these rules. In practice, we keep our constraint sets in closed
+form at all times during constraint generation; that is, for every new constraint that gets generated,
+we apply all eligible propagation rules until we reach a fixpoint.
+If we consider the elements of C as subtyping constraints, then these rules amount to subtyping
+rules. Rules CP-Trans-T and CP-Trans-E express transitivity for types and effect, respectively.
+CP-Join-T and CP-Join-E decompose as usual flows from joins of elements.
+Rule CP-Call decomposes the flow of an arrow type to a calling context. Note that the incoming
+arrow type has a type variable α as the parameter type, since this is the form in which it is produced
+by CG-Fun. Also by the CG-Call the effect and return type portion of the calling use are also
+variables. Handling this flow propagates three new flows: (i) the argument’s type τ ′ flows to the
+parameter type variable α, (ii) the return type τ flows to the call-site’s type β, and (iii) the function’s
+effect ε flows to the call’s effect variable ω. This last byproduct often triggers the “havoc” mechanism,
+which carries out the task of applying a function’s effect on the variables that are updated by it.
+Rule CP-Havoc recovers soundness by restoring the conservative types for variables that are
+updated through function calls (CG-Call) or are reassigned during conditional type refinement
+(Ref-Effect). Lets assume the havoc operation was introduced due to the former rule. (The latter
+
+"
+`;
+
+exports[`getPageText with large file Page [14 / 58] - should get the page text 1`] = `
+"14
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+case works similarly.) When CP-Havoc is triggered, our analysis has determined that variable x
+gets updated in the called function, and so entries bound to x in the environment after the function
+call should be conservatively approximated. Of course, this rule is only meaningful if x is bound
+in that environment. Otherwise this effect can be ignored. Effectively, this corresponds to erasing
+the type of the binding x : βα, by generating a flow from the flow-insensitive type α to β. This
+process may happen far away from the actual call-site, which exemplifies the global character of
+the type inference. An observant reader might notice that the environment argument of Havoc has
+entries of the form βα. We can guarantee that this is the only possible form, by construction of the
+respective flows in rules CG-Call and Ref-Effect. In both cases this happens after a widening
+operation, which guarantees that the base of the environment entry is a type variable.
+Rule CP-P-Base handles predicate refinement. The intuition here is that ˆτ should flow to α, if it
+succeeds in the check implied by P, i.e., if check (ˆτ, P) is true. We have kept the representation of
+base predicates abstract, and so we will do with the definition of check. In general, check should
+be able to decide if ˆτ satisfies P by inspecting its top-level constructor (for checks like typeof ⋆
+=== "string") or one of its fields.
+Rule CP-P-Trans is a technical one. It allows parts of types under refinement to be concretized.
+In τ ′⟨α⟩, the form τ ′⟨⟩ is a type context, i.e., a type with a “hole” that is filled in with α, for
+example {f : ⟨⟩}. While rule CP-Trans-T will fail to instantiate α, CP-P-Trans allows type variables
+appearing under a type constructor (e.g., the object constructor) to be instantiated. However, not
+all substitutions are allowed, but only the ones where α is in a positive position with respect to
+type polarity [Dolan and Mycroft 2017; Pottier 1998]2. The reason we require type variable α to
+appear in a positive position is to abide by our restriction that type joins cannot appear at the
+right-hand side of constraints. If we allowed the replacement of α from τ in any part of τ ′, this
+could potentially break this invariant in a later propagation. We will also see the importance of this
+rule in the upcoming example.
+Finally, Rules CP-Get and CP-Set handling record field access and update are standard.
+
+3.3
+Consistency
+
+The goal of running constraint generation and propagation is to eventually discover inconsistencies
+in the saturated constraint set. These effectively correspond to potential bugs in the use of the
+various operators, for example they could correspond to the case of a non-function value reaching
+the receiver position of a call. Below we present a formal description of consistency.
+
+Definition 3.1 (Consistency). A closed constraint set is consistent if it does not contain any
+constraints in one of the forms:
+
+• ˆτ ≤ Call(τ
+ω−→ α) where ˆτ is not an arrow type (or an arrow-like type, e.g., the type of a
+constructor object).
+
+• ˆτ ≤ Set ({f : τ }) or ˆτ ≤ Get ({f : α}) where ˆτ is not an record type literal (or an object-like
+type) containing f.
+
+If our analysis finds an inconsistency, then this leads to an error report. Otherwise, if no incon-
+sistency can be found then the input program enjoys the safety guarantees of Theorem 5.2.
+
+Example
+
+We continue where we left off in the example of Section 3.1, by applying the rules from Figure 9 on
+C, in order to discover inconsistencies or prove the absence thereof.
+
+2Section A.4 includes a formal definition of polarity and type contexts.
+
+"
+`;
+
+exports[`getPageText with large file Page [15 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+15
+
+Use of predicates. We start by applying CP-Call on the calls of (5), (6), (7), (8), and the respective
+function definitions:
+
+C ⊇ {γ2 ≤ α7, τr ≤ δ1 }
+(12)
+
+C ⊇ { number ≤ α2, {kind : α1} ≤ α3, O ≤ δ2 }
+(13)
+
+C ⊇ { number ≤ α2, δ2 ≤ α3, O ≤ δ3 }
+(14)
+
+C ⊇ { δ3 ≤ α7, τr ≤ δ4 }
+(15)
+
+Now lets focus on the interesting case of handling the getters of (5). By transitivity (CP-Trans-T)
+using (14), (15) and (4), the record type O flows to the predicate use:
+
+C ⊇ { {kind : α4, head : α5, tail : α6} ≤ Pred(pc, β7) }
+(16)
+
+We use Rule CP-P-Trans on (2) and (16) to obtain:
+
+C ⊇ { {kind : "cons", head : α5, tail : α6} ≤ Pred(pc, β7) }
+(17)
+
+This is now a successful test since the string literal type "cons" of field kind satisfies pc and so:
+
+C ⊇ { {kind : "cons", head : α5, tail : α6} ≤ β7 }
+(18)
+
+Flow has thus discovered a path in which a “cons” object reaches the field accesses of line 14.
+However, this latest constraint has enabled new flows that could cause inconsistencies, e.g., the
+recursive calls to sum on the tail of list. By (18) and (5), and applying CP-Trans-T and CP-Get:
+
+C ⊇ { α6 ≤ γ2 }
+(19)
+
+Indeed, by combining (13), (2), (19), (12) and (4) with CP-Trans-T and the result with (1) with
+CP-P-Trans:
+
+C ⊇ { {kind : "nil"} ≤ Pred(pc, β7) }
+(20)
+
+This test, however, will fail, as it would at runtime, and so the “nil” object will not reach the getter
+for head or tail through α6. Without the predicate refinement filtering out “nil” objects, we would
+have introduced a false positive.
+
+Refinements and Mutation. Last, we illustrate how Flow handles functions merge and havoc. We
+start by processing (11) with CP-Call and then CP-Havoc, which yields:
+
+C ⊇ { α8 ≤ α11 }
+(21)
+
+This allows the null from the reset function to find its way to α11 from (10) and from there to the
+“get” operation through (9):
+
+C ⊇ { null ≤ Get ({kind : α10}) }
+(22)
+
+This latter constraint signals a consistency violation, keeping Flow sound with respect to variable
+updates that invalidate prior refinements.
+
+"
+`;
+
+exports[`getPageText with large file Page [16 / 58] - should get the page text 1`] = `
+"16
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Runtime Expressions
+e
+::=
+. . . | ℓ
+
+Values
+v
+::=
+n | ℓ
+
+Heap Values
+�v
+::=
+v | ⟨L, (x) ⇒ M⟩ | {f1:v1, . . . , fn:vn}
+
+Evaluation Contexts
+E
+::=
+⟨ ⟩ | x = E | E(e) | ℓ(E) | E &&e | E ||e |
+|
+{f1:v1, . . . , fk: Ek, . . . , fn:en}
+|
+! E | E.f | E.f = e | v.f = E | var x = E
+|
+if (E) {s1} else {s2} | return E | E;s
+
+Heaps
+H
+::=
+· | H, ℓ �→ �v
+
+Stacks
+X
+::=
+· | X, L.E
+
+Stores
+L
+::=
+· | L, x �→ ℓ
+
+States
+S
+::=
+⟨H; X; L⟩
+
+Configurations
+R
+::=
+S; e | S; s | S; M
+
+Fig. 10. Runtime Definitions in FlowCore
+
+3.4
+Implementation of Type Inference
+A set of flow constraints C can be thought of as a constraint graph, where variables, literals and
+uses are the nodes and the constraints among them are the edges. In this section, we briefly discuss
+how we represent constraint graphs and compute their closure efficiently. Let us refer to type and
+effect variables as “unknowns.” Following Pottier [2001], the constraint graph maps each unknown
+to a set of lower bounds and a set of upper bounds, each of which contains the unknown itself.
+The transitive propagation rules are specialized to exploit this structure to efficiently keep the
+constraint graph in closed form.
+However, equality constraints are quite inefficient in this system: they are represented as a pair
+of subset constraints, which causes a cubic blowup in the transitive propagation rules. On the other
+hand, equality constraints are quite useful and common in Flow. They arise due to invariant typing
+of object properties, array elements, and type arguments of polymorphic classes. They directly
+model equations expressed by type aliasing. Finally, even though we formalize CP-Havoc with a
+constraint of the form α ≤ β, we can replace it without loss of generality with α = β.
+To address the inefficiency, we generalize the constraint graph by considering each unknown
+to be in an equivalence class containing other unknowns it is unified with, and mapping each
+equivalence class to either “unresolved” bounds (like Pottier [2001]), or to a “resolved” type or effect
+(as in unification). The transitive propagation rules generalize in a straightforward way. Overall,
+this simple optimization leads to O(n) reduction in space and time complexity.
+
+4
+RUNTIME SEMANTICS
+Before we describe our safety result (Section 5) we present the runtime semantics for the formal
+fragment of Section 2, which is heavily based on that used by Rastogi et al. [2015] that cover a
+subset of JavaScript, emphasizing on features of interest, while abstracting away non-crucial ones.
+
+4.1
+Definitions
+
+Figure 10 contains the definitions for runtime configurations in FlowCore.
+
+Runtime Values. To account for heap-allocated values, we introduce locations ℓ that index runtime
+heaps. Together with constants they synthesize runtime values, which are normal form as far as
+execution is concerned. Locations are also added to the set of expressions in our runtime language
+along with all other expression forms introduced earlier.
+
+"
+`;
+
+exports[`getPageText with large file Page [17 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+17
+
+Runtime State. There are three constituent parts that compose a runtime state S. The first part
+is the heap H, which includes bindings from locations to heap values �v, which in turn are either
+values, closures, or heap objects. A closure is a pair containing a store L that binds all external
+variables available at the point of definition of the arrow function (capture by reference), and the
+function’s code, which is a statement succeeded by a returned expression. The second part of the
+runtime state is the stack X, that contains a list of stack frames. Each stack frame includes a store
+containing the variables bound in the stack frame at the time execution left that frame, and an
+evaluation context E that holds the context that execution would jump into when returning to
+that stack frame. Evaluation contexts are defined in the usual way having the same structure as
+expressions or statements but with a hole ⟨ ⟩ at the position of the term that is about to be evaluated
+next. Finally, the runtime state includes a store L, that comprises bindings of variable names to
+locations to allow closures to capture values by reference.
+
+Runtime Configurations. We write our runtime configurations S (i.e., programs under execution)
+as pairs that contain a runtime state S, and a language term, which can either be an expression e, a
+statement s, or a function body {s; return e}. We conflate the notions of expressions and function
+bodies into a common notion using the symbol M, for compactness in stating our results.
+
+4.2
+Reduction Rules
+Figure 11 contain a small-step operational semantics for programs in FlowCore. The rules can
+have the forms: S; e −→ S′; e′ and S; s −→ S′; s′.
+Next we describe some of the most interesting rules. Rule RT-Var shows the indirection in
+dereferencing variables. First the store L is looked up and then the resulting location is used
+to access the heap H. Similarly variable assignments have to go through the same process in
+Rule RT-Asgn. Here, symbol ◁ denotes the update of state S with the new heap H′.
+When evaluating arrows, the current store S.L is saved as part of the created closure, along with
+the code M of the function (Rule RT-Arr). This store is restored when the function is called (Rule RT-
+Call). The new store L′ that will be used in the new stack frame also includes a binding for the
+function parameter x and bindings from all variables xi defined in the body M, since their definition
+is hoisted to the top of the function scope. We use metavariable locals to extract these variables. All
+new variables are bound to fresh locations ℓi. Locals have not been initialized yet, so their locations
+are bound to undefined in the heap H′. Finally, a new stack frame L.E is pushed on the existing
+stack X as we enter the new function context. After returning from this function, execution will
+return to E (Rule RT-Ret). The rest of the expression reduction rules are routine.
+
+5
+METATHEORY
+
+In order to prove type safety for our type system we first introduce a declarative type system that
+closely matches the intuition of the type inference system described in Section 3. Based on the
+declarative system we then formulate a type safety argument for the above language fragment via
+a progress and a preservation theorem [Wright and Felleisen 1994], that connect type checking
+with the runtime semantics of Section 4. Essentially, we establish the fact that if a program has
+been checked with the above algorithm and has been found consistent, then its execution will not
+lead to uncaught type errors (e.g., “undefined is not a function”). Introducing this intermediate step
+in our metatheory is not mandatory, but it vastly reduces the complexity of reasoning about type
+safety, compared to the inference version of Section 3.
+
+"
+`;
+
+exports[`getPageText with large file Page [18 / 58] - should get the page text 1`] = `
+"18
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Expression and Statement Reduction Rules
+S; M −→ S′; M′
+S; s −→ S′; s′
+
+⟨H; X; L⟩; e −→ ⟨H′; X; L′⟩; e′
+
+⟨H; X; L⟩; E⟨e⟩ −→ ⟨H′; X; L′⟩; E⟨e′⟩
+[RT-Ectx]
+S; x −→ S; S.H(S.L(x))
+[RT-Var]
+
+H′ = H[ L(x) �→ v ]
+
+S; x =v −→ S ◁ H′; v
+[RT-Asgn]
+ℓ fresh
+H′ = H, ℓ �→ ⟨S.L, (x) ⇒ M⟩
+
+S; (x) ⇒ M −→ S ◁ H′; ℓ
+[RT-Arr]
+
+H(ℓ) = ⟨L0, (x) ⇒ M⟩
+ℓ′, ℓi fresh
+xi = locals(M)
+H′ = H, ℓ′ �→ v, ℓi �→ undefined
+X′ = X, L.E
+L′ = L0, x �→ ℓ′, xi �→ ℓi
+
+⟨H; X; L⟩; E⟨ℓ(v)⟩ −→ ⟨H′; X′; L′⟩; M
+[RT-Call]
+
+S ≡ ⟨H; X; L⟩
+�v = H(L(x))
+
+S; p(x) −→ S; δp( �v)
+[RT-Pred-Var]
+truthy(v)
+
+S; v &&e −→ S; e
+[RT-And-Tru]
+
+falsy(v)
+
+S; v &&e −→ S; v
+[RT-And-Fls]
+truthy(v)
+
+S; v ||e −→ S; v
+[RT-Or-Tru]
+falsy(v)
+
+S; v ||e −→ S; e
+[RT-Or-Fls]
+
+v′ = ¬toBool(v)
+
+S; !v −→ S; v′
+[RT-Neg]
+ℓ fresh
+H′ = H, ℓ �→ {f1:v1, . . . , fn:vn}
+
+S; {f1:v1, . . . , fn:vn} −→ S ◁ H′; ℓ
+[RT-Record]
+
+S.H(ℓ) = {fi:vi, f:v, fj:ej}
+
+S; ℓ.f −→ S; v
+[RT-FldRd]
+H′ = S.H[ ℓ �→ S.H(ℓ)[ f �→ v ] ]
+
+S; ℓ.f = v −→ S ◁ H′; v
+[RT-FldWr]
+
+H′ = H[ ℓ �→ v ]
+
+S; var x =v −→ S ◁ H′; skip
+[RT-Var]
+s ≡ truthy(v) ? s1 : s2
+
+S; if (v) {s1} else {s2} −→ S; s
+[RT-If]
+
+S.X = X′, L.E
+S′ = S.H; X′; L
+
+S; return v −→ S′; E⟨v⟩
+[RT-Ret]
+S; skip;s −→ S; s
+[RT-Skip]
+
+Fig. 11. Operational Semantics of FlowCore
+
+5.1
+Declarative Type System
+This system assigns concrete types, i.e., types stripped off of type variables, to language terms
+of FlowCore. Environments Γ also map program variables to concrete type entries (where both
+flow-sensitive and flow-insensitive types are concrete). The same holds for effects ε. The typing
+judgments for expressions and statements are: Γ ⊩ e : τ; ε; ψ
+
+⊩
+
+Γ′ and Γ ⊩ s : ε
+
+⊩
+
+Γ′. The
+respective rules for these judgments follow the main intuitions of the inference system and are
+therefore deferred to Section B, along with other attendant definitions.
+A substitution ρ maps type variables of the inference system to concrete types of the declarative
+system, and can be extended to types, effects and environments in a point-wise manner. Constraints
+c in the inference system correspond to subtyping relations in the concrete system for both types
+and effects. We can use the same substitution ρ to convert a constraintc to one or multiple subtyping
+constraints over concrete types or effects. Since our type language has been kept simple overall,
+
+"
+`;
+
+exports[`getPageText with large file Page [19 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+19
+
+the subtyping rules for concrete types are routine and so a discussion is deferred to the appendix.
+We say that a substitution ρ satisfies a constraint set C if all subtyping constraints generated by
+mapping ρ over C are valid. In this case we write ρ ⊢ C.
+We argue about the soundness of our type inference system with respect to the declarative
+system with the following lemma.
+
+Lemma 5.1 (Soundness of Type Inference). If Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷C and there exists substitution
+ρ s.t. ρ ⊢ C, then ρ (Γ) ⊩ e : ρ (τ) ; ρ (ε) ; ψ
+
+⊩
+
+ρ (Γ′).
+
+5.2
+Type Safety
+Before we state our type safety result for the declarative system, we extend the type checking
+judgment to runtime configurations: G ⊩Σ S; e : τ. Here G is a flow-insensitive environment
+mapping variables to their most general concrete type throughout the program. The judgment
+is to be read as: under a heap typing Σ, mapping heap locations to types and a flow-insensitive
+environment G, a configuration S; e is a assigned a type τ. We can now state our type safety result.
+
+Theorem 5.2 (Type Safety). For a configuration S; e and heap typing Σ, if G ⊩Σ S; e : τ, then:
+
+• (Preservation) If S; e −→ S′; e′, then there exists Σ′, such that G ⊩Σ′ S′; e′: τ ′.
+• (Progress) Either e is a value, or there exists a configuration S′; e′ such that S; e −→ S′; e′.
+
+Supporting lemmas and proofs for the above results can be found in the appendix.
+
+6
+TYPE ANNOTATIONS
+So far, we have described a system for type inference that ensures that values are used in ways
+that are consistent with their definitions. But can we check that the inferred types of values are
+consistent with types we specify?
+In this section, we introduce a system for type checking. Type annotations τ follow a similar
+grammar as types except that there are no type variables, types can appear anywhere type variables
+could appear, and there are no effects. We consider a type annotation to be just another kind of
+type use, that expects some type of values. In other words, like everything else we can formulate
+type checking with flow constraints.
+Technically, we need some new propagation rules for flow constraints involving type annotations.
+When we see a constraint of the form L ≤ {f1 : τ1, . . . , fn : τn}, we propagate it with new
+constraints L ≤ Get ({f1 : α1}), α1 ≤ τ1, L ≤ Set ({f1 : τ1}), ..., L ≤ Get ({fn : αn}), αn ≤ τn,
+L ≤ Set ({fn : τn}). (As mentioned Section 3.1, when L is a record type, these flow constraints can
+be replaced by unification constraints as an optimization.)
+The remaining propagation rules rely on some new definitions.
+
+Escaping effects. Since a function type annotation has nothing to do with any particular function
+expression, we cannot calculate its effect in the usual manner. Instead, we assume that there is an
+effect variable ω⋆ that captures “escaping” effects, and that all function type annotations have this
+effect. When we see a constraint of the form L ≤ τ1 −→ τ2, we propagate it with the new constraints
+
+L ≤ Call(τ1
+ω⋆
+−−→ α2) and α2 ≤ τ2.
+
+Conditional flow constraints. Checking that an inferred type is consistent with a union type
+annotation is tricky. Intuitively, this amounts to checking that the inferred type is consistent with
+either case of the union type annotation. But since the inferred type may contain type variables, it
+may not be obvious which case to pick. Consider the code in Figure 12 (left), where the parameter
+f on line 33 has a type that is the union of two function types. The call on line 33 is safe, since both
+function types take string. However, it is unclear which choice of function type to use for id on
+
+"
+`;
+
+exports[`getPageText with large file Page [20 / 58] - should get the page text 1`] = `
+"20
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+29
+type IDString = (string) => string;
+
+30
+type IDNullableString = (?string) => ?string;
+
+31
+type Ambiguous = IDString | IDNullableString;
+
+32
+
+33
+function onString(f: Ambiguous) { f(""); }
+
+34
+var id = (x) => x;
+
+35
+onString(id);
+
+36
+id(null);
+
+37
+type Correlated
+
+38
+= { type: "string", val: string }
+
+39
+| { type: "number", val: number };
+
+40
+
+41
+function stringIsString(x: Correlated) {
+
+42
+if (x.type === "string")
+
+43
+displayString(x.val);
+
+44
+}
+
+45
+stringIsString({ type: "string", val: 0 });
+
+Fig. 12. Type Annotations
+
+line 35. Picking IDString seems fine “locally,” but turns out to be the wrong choice since null is
+passed on the next line and picking IDNullableString instead would type check.
+Alternatively, we could propagate the choice further, effectively introducing disjunction in the
+logic of flow constraints. While appealing from a theoretical perspective, in practice this approach is
+complicated to implement and difficult to scale. It also doesn’t mesh well with refinements. Consider
+the code in Figure 12 (right). Here, we propagate the choice of type for the object argument on
+line 45 into the fields of the object types in the union Correlated; this causes the call to type check,
+since the type and val fields of the object separately typecheck against the corresponding unions.
+However, this is unsound, as the call on line 43 shows (it passes a number at run time where a
+string is expected).
+Instead, our approach is to try picking a case without ambiguity (i.e., without considering type
+variables), or demand further type annotations to disambiguate. Specifically, let any constraint of
+the form α ≤ ⋆ or ⋆ ≤ α be a condition: its validity is conditional on what type α is inferred to
+be. Suppose that we have a restricted form of constraint propagation without the transitivity rule
+CP-Trans-T, so that conditions are not propagated. The propagation rule for choice, described
+below, uses this restricted form of constraint propagation to generate a set of constraints. If the rule
+signals an ambiguity, then the developer must provide annotations for the type variables involved
+in any generated conditions. Otherwise, the generated conditions are propagated further using the
+unrestricted rules.
+A constraint of the form L ≤ τ1 ⊔ τ2 is propagated as follows:
+
+• Either L ≤ τ1 generates an inconsistent set of constraints; then we continue with L ≤ τ2.
+• Or L ≤ τ1 generates a consistent set of constraints c1.
+
+– Either L ≤ τ2 generates an inconsistent set of constraints; then we continue with c1.
+– Or L ≤ τ2 generates a consistent set of constraints c2.
+
+∗ Either c1 ⊆ c2; then we continue with c1.
+∗ Or c1 ⊈ c2; then we signal an ambiguity.
+
+7
+MODULES AND DEPENDENCIES
+
+Until now, we have presented Flow’s analysis on “whole” programs. However, JavaScript codebases
+can be quite large (e.g., at Facebook we have millions of lines of JavaScript code), and a whole-
+program set-based analysis is simply not fast enough at scale.
+In this section, we show how we modularize Flow’s analysis. Modularization is important for
+performance, in terms of both time and space. It is also a natural fit for modern JavaScript, where
+code is typically split across a (large) number of (small) files; every file is mapped to a module,
+and possibly imports other modules; definitions are local by default, unless they are exported; and
+accessing global definitions other than builtins is generally discouraged.
+
+"
+`;
+
+exports[`getPageText with large file Page [21 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+21
+
+Broadly, we follow the standard approach of analyzing each file separately, once all files it
+depends on have been analyzed. This strategy allows us to incrementally analyze the program as
+files change (Section 8), and parallelize the analysis across files (Section 9).
+The key idea is to demand a “signature” for every module. We ensure that types inferred for
+the expressions a module exports do not contain type variables—wherever they do, we demand
+type annotations. For example, the parameter of an exported function expression must specify
+its type. Otherwise, we risk having the type of the parameter depend on calls in other files that
+import this module, which breaks modularization. (Alternatively, we could try generalizing the
+parameter’s type based on how it is used inside the function expression, but in our experience it
+leads to unwieldy types.)
+Requiring annotations for module interfaces is much better than requiring per-function annota-
+tions: a typical module exports one object or function, while having a bunch of module-internal code.
+The minimum annotation burden is only a small fraction of lines of code. (Of course, annotations
+are permissible even where they are not required.)
+The type annotation syntax is designed to be nearly as expressive as the internal type language,
+but it is not true that all well-typed code can be cleanly refactored into modules to preserve typing.
+This is by design: modules are abstractions, and so some rewriting might be needed to prevent
+leaking abstractions. For example, effects do not appear in types at all, and local effects that leak
+after refactoring would need rewriting.
+Independently, having a signature for every module turns out to be a desirable choice for software
+engineering. It is considered good practice for documentation (files that import the module can
+simply look up its signature instead of its implementation), as well as error localization (blames for
+errors do not cross module boundaries).
+
+Modules, exports, and imports. For the purposes of this paper, let us assume that every file maps
+to a module by the same name. (This is sufficient to model the popular CommonJS module system,
+which is the default module system in Flow. However, we also support module systems where
+module names are independent of file names and not necessarily in 1-1 correspondence.)
+A file can import definitions that another file exports. However, the reference m to the exporting
+file inside the importing file is relative to the importing file.
+
+Module loading and dependency tracking. We assume a module loading judgment FS ⊩ Fi ::
+m � F ?
+e that, given a file name Fi and a reference m, either computes the name Fe of the file being
+referenced by m in Fi or errors, while recording any files looked up by the derivation in FS (which
+may or may not exist). Whenever FS ⊩ Fi :: m � Fe, we assume Fe exists and have Fe in FS.
+Given a file system state that satisfies the constraints FS, we say that Fi depends on Fe whenever
+FS ⊩ Fi :: m � Fe.
+
+Compilation and linking. Files are “compiled” and “linked” in dependency order. In practice,
+there may be cycles in the dependency graph, so this process is run on the directed acyclic graph
+of strongly connected components, where each strongly connected component is considered to
+have all the imports and exports of the files in it. For each file, compilation and linking generates
+exported types and signature constraints of the form ˆτ ≤ α, where any type variables in ˆτ are in
+positive positions. Such signature constraints fully describe the types of exports of the file, which
+can be “substituted” for the types of corresponding imports in dependent files.
+Suppose that compiling a file F, with module references typed as fresh type variables α1, . . . ,αn,
+generates constraints c and an exported type τ. Furthermore, suppose that the module references
+resolve to files F1, . . . , Fn that have their signature constraints c⋆
+1 , . . . ,c⋆
+n and exported types
+τ1, . . . ,τn.
+
+"
+`;
+
+exports[`getPageText with large file Page [22 / 58] - should get the page text 1`] = `
+"22
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Then, we link F by adding c⋆
+1 , . . . ,c⋆
+n to c, propagating the constraints τ1 ≤ α1, . . . ,τn ≤ αn, and
+transforming c to c⋆ by the process signature(τ), defined recursively as follows:
+
+(1) signature(α) throws away upper bounds of α, and calls signature(ˆτ) for each ˆτ ≤ α.
+(2) signature(ˆτ) demands a type annotation for each type variable in a negative position in ˆτ,
+and calls signature(α) for each α in a positive position in ˆτ.
+
+Intuitively, this process walks over constraints, with the exported types as roots, while doing
+two things. One, any constraints that would be unreachable when the exported types flow to type
+uses in dependent files are pruned away. Two, the developer must provide annotations wherever
+constraints could propagate back from dependent files.
+Formally, a key property of signature constraints c⋆ and exported types τ is that it is impossible
+for a constraint of the form τ ≤ u to lead to, via propagation, a constraint of the form ˆτ ≤ α where α
+is in c⋆. In other words, signature constraints and exported types can be considered “closed” when
+linking dependent files. This means that they do not need to be recomputed for correctness—in
+fact, they can be memoized and reused—which is crucial for performance. This also means that
+whenever “diamonds” occur in the dependency graph, i.e., F depends on another file via multiple
+paths, the signature constraints of F are the same no matter which order the paths are explored.
+
+8
+INCREMENTALIZATION
+
+In this section, we show how Flow exploits modularity and dependency management to incremen-
+tally analyze files as they change.
+
+Architecture. Flow’s architecture consists of a server, a client, and a file system watcher. The
+server initially analyzes the entire codebase, following the procedure in the previous section, and
+stores a bunch of information in memory. The information not only includes the status (type errors),
+but also the results of separately compiling and linking every file, and the dependencies between
+files. Once the server is initialized, it runs in the background.
+The client queries the server for information, relaying commands issued via the command-line
+or various IDEs. Typically, the client is interested in the status. But the client could also ask for the
+type at a particular position, the definitions reaching a particular reference, etc., in which case the
+server computes that information almost instantaneously from the information already stored in
+memory.
+Finally, the file system watcher informs the server of changes to the file system: which files have
+been added, modified, or deleted. Based on this information, the server re-analyzes a (hopefully
+small) fraction of the code base, and updates the information stored in memory. (When the client
+queries the server again, the response is based on this updated information.)
+
+Incremental analysis. Files that are added or modified need to be re-analyzed. In addition, a subset
+of unmodified “dependent” files needs to be re-analyzed. This set can be partitioned into direct
+dependents and indirect dependents.
+Direct dependents are computed as follows. For any file F that is added, modified, or deleted,
+whenever F is in FS for any unmodified Fi where FS ⊩ Fi :: m � F ?
+e, we consider Fi is a direct
+dependent. The depends relation is modified by re-resolving module references in direct dependents.
+Indirect dependents are unmodified files that recursively depend on direct dependents.
+
+9
+PARALLELIZATION
+
+We use a map/reduce algorithm augmented with shared memory communication for parallelizing
+various stages of type checking, building on and extending Hack’s model [Hack 2014].
+
+"
+`;
+
+exports[`getPageText with large file Page [23 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+23
+
+9.1
+Workers
+
+Assume we want to distribute a task on a number of files, computing a result of type R. We describe
+the task with a function job : Files → W ; a function merge : R ×W → R; a value neutral : R; and
+a function next : () → Files.
+We have a master process and as many worker processes as the number of available processors.
+The master initially has result as neutral, and considers all workers free. Then, it repeatedly does
+the following:
+
+• If there is a free worker, call next() to obtain a list of files files. If files is empty and all workers
+are free, exit with result result. If files is not empty, send it to the free worker.
+
+• If a worker has sent back w, consider the worker free, run merge(result, w) and update result
+with it.
+
+Correspondingly, every worker repeatedly does the following. If the master has sent files, fork a
+process to run job(files), wait for a value w, and send back w to the master.
+Usually, the next function is simple. It just remembers an index into the original list of files.
+When the index is out of bounds, it returns an empty list; otherwise it returns a sublist from that
+index of some fixed “bucket” size, and advances the index. This models processing a static list of
+files in no particular order.
+What if the processed list is computed dynamically, in a particular order? For that, we make
+the following changes. We maintain a “worklist” of files, and have next create a bucket from
+the worklist instead. Let the intermediate result type W ′ be Files × W . Then job′(files) returns
+(files, job(files)). Finally, merge′(result, (files, w)) updates the worklist with files, before returning
+merge(result, w).
+
+9.2
+Shared Heap
+
+As described above, the master and the workers communicate by serializing and deserializing data
+like files and intermediate results. In practice, the results that need to be computed are often maps
+from files to large values, and thus communicating intermediate results from the workers back
+to the master becomes a performance bottleneck. Furthermore, manipulating large results in the
+master spikes its memory usage and causes frequent garbage collection pauses, which affects the
+server’s responsiveness.
+Thus, we use a different mechanism for sharing results: a large hashtable mapped to RAM,
+accessible to both the master and the workers, that is logically divided into various maps. The
+hashtable provides fast (lock-free) concurrent access for reads, as well as for writes as long as they
+add entries for disjoint keys. Only the master can remove entries. These conditions turn out to be
+easily satisfied in our setting: at any stage of type checking, different workers always operate on
+different files, and old entries are only ever cleared to make way for new entries when processing
+file system changes in the master.
+Entries are compressed on writes. (We use LZ4 [Collet 2011] because it is extremely fast, while
+providing sufficient compression.) In practice, this means we can tolerate redundancy in the entries,
+trading off space for time by precomputing information. Moreover, entries are cached on reads.
+With the shared heap, the types R andW can be quite small (typically, metadata for bookkeeping).
+Moreover, the processes forked by workers to run jobs are short-lived: their memory is reclaimed
+by killing them on every completion.
+
+9.3
+Parallelizing Parsing
+
+Files are parsed in parallel, in no particular order, using a static next. Every job writes the abstract
+syntax trees for corresponding files to shared memory.
+
+"
+`;
+
+exports[`getPageText with large file Page [24 / 58] - should get the page text 1`] = `
+"24
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+ 
+
+0
+
+5
+
+10
+
+15
+
+20
+
+25
+
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+
+PERCENT OF FILES
+
+PERCENT OF ANNOTATIONS PER FILE
+
+Fig. 13. Distribution of annotations
+
+ 
+
+2
+4
+8
+16
+32
+
+0
+
+200
+
+400
+
+600
+
+800
+
+1000
+
+1200
+
+1400
+
+1600
+
+CPUs
+
+TIME (sec)
+
+Parse
+
+Compile+Link
+
+Fig. 14. Effects of parallelization on performance
+
+9.4
+Parallelizing Compilation and Linking
+Next, the files are compiled and linked in parallel, following dependency order, using a dynamic
+next. We maintain a count of dependencies for each file. The worklist initially contains files that
+do not depend on any other files. As files are processed, they decrement the dependency counts of
+other files that depend on them, possibly causing those files to be added to the worklist (because
+they no longer depend on any files that have not already been processed).
+Every job reads the abstract syntax trees for the corresponding files, and the signature flow
+constraints for the files they depend on, does compilation and linking, and finally writes the
+signature flow constraints for the corresponding files to shared memory.
+Note that a file does not need to be rechecked if the signature flow constraints for none of its
+dependencies change. This is a major optimization: it means that even though a file may have a lot
+of recursive dependents, only a small fraction of them may actually need to be rechecked. Indeed,
+in practice it results in order-of-magnitude differences in recheck times. The implementation is
+slightly tricky because new signature flow constraints often contain fresh type variables that make
+them trivially different than old signature flow constraints. We compute and compare hashes
+modulo such trivial differences to detect when signature flow constraints have changed.
+Compiling and linking files in dependency order limits some parallelism in theory, but in practice,
+the alternative approach of processing every file independently ends up doing far more work.
+Overall we save processing time by an order of magnitude.
+
+10
+EXPERIMENTS
+
+We ran experiments on the main internal repository at Facebook, in which (at the time of writing
+this paper) around 13M LOC of JavaScript are covered by Flow, spanning around 122K files. We
+chose this repository because it contains a wide variety of JavaScript projects, implementing client
+code and frameworks for web applications, that depend on each other but are owned by different
+teams and do not necessarily conform to a uniform coding style. (A smaller repository contains
+client code and frameworks for mobile applications, which is also covered by Flow, but which we
+do not consider here—the general conclusions about Flow’s behavior, however, remain the same.)
+
+Distribution of annotations. For each file, we counted the number of annotations as a fraction of
+the total number of locations that could potentially be annotated. Figure 13 shows the distribution
+of these relative numbers across the repository. The median is 29% annotations. In aggregate, there
+are around 686K annotations vs. 1502K other locations that could potentially be annotated but
+
+"
+`;
+
+exports[`getPageText with large file Page [25 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+25
+
+are not. Note that these numbers do not account for type inference of every expression—only
+declaration sites are considered—and thus conservatively overapproximate the annotation burden.
+
+Usage of refinements. As a quick test of the impact of supporting refinements in Flow, turning it
+off led to more than 145K spurious errors across this repository.
+
+Effects of parallelization on performance. Total initialization time was around 225s with 32 pro-
+cessors (Xeon, 2.2GHz), which means around 3 ms per file on average. We also used around 4GB of
+shared memory.
+Figure 14 shows how performance varies with the number of processors (we only measured
+performance for powers-of-2 processors and extrapolated). Parsing times become half from 2
+to 4 processors, but then the improvements slow down (since parsing is already quite fast, and
+communication starts dominating—an example of Amdahl’s law). Compilation and linking times
+hit the limit much later, continuing to improve almost linearly until 16 processors. (This makes
+sense, since compiling and linking is much slower than parsing.)
+
+Effects of code size on performance. The time taken to compile and link a file grows approximately
+linearly with code size. While set-based analysis is well-known to be worst-case cubic in code
+size, the lines of code per file is small (average 106), and the imports are summarized by signature
+constraints, which are much smaller than the corresponding lines of code of dependencies.
+
+Effects of dependencies on performance. The time taken to process a file is not correlated with
+the number of recursive dependencies—the spread of times remains relatively flat as dependencies
+grow. This is not very surprising, since signature constraints of imports are supposed to “compress”
+the information contained in recursive dependencies. On the other hand, the time taken to process
+a file grows approximately linearly with the number of imports.
+The size of the signature constraint graph, which form the results of compiling and linking, is
+not correlated with code size—for most files, the sizes are between 50-100KB.
+
+Effects of incrementalization on performance. The performance of incremental type checking is
+tied to the number of files that are rechecked when a file is modified, i.e., the number of files that
+recursively depend on that file.
+The distribution of the number of recursive dependents is highly positively skewed—the median
+is less than 10, and the 90th percentile is less than 100. Considering the time taken to recheck to
+be roughly proportional to the number of files to link, this means that in 90% of cases, recheck
+time is less than 200ms plus some constant. Of course this is only a rough calculation: in practice,
+while this closely approximates the common scenario of editing single files, it doesn’t account for
+occasional rebases that can cause larger numbers of files to be rechecked.
+
+11
+RELATED WORK
+There has been a lot of work on type systems for JavaScript and related languages, as well as
+set-based inference techniques. We focus here only on the most closely related work.
+
+11.1
+Mainstream Type Systems for Dynamic Languages
+
+TypeScript [2012] is a widely used typed superset of JavaScript. Like Flow, it aims to improve
+developer productivity by providing tooltips through IDEs. Unlike Flow, it focuses only on finding
+“likely errors” without caring about soundness [Bierman et al. 2014]. Type inference in TypeScript is
+mostly local and in some cases contextual; it doesn’t perform global type inference like Flow, so in
+general more annotations are needed. Whenever type annotations are missing, they are considered
+
+"
+`;
+
+exports[`getPageText with large file Page [26 / 58] - should get the page text 1`] = `
+"26
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+to be any (instead of being implicitly inferred). Thus, many type errors are missed. Consider for
+example the program:
+
+function square(n) { return n * n; }
+square("oops");
+Flow will signal an error for trying to use a string as an argument to a multiplication. TypeScript,
+on the other hand, will infer any as the type for n and accept this program as valid. To get a similar
+behavior from TypeScript we would need to add a type annotation to the parameter n of square.
+Furthermore, even with fully annotated programs, TypeScript misses type errors because of
+unsound typing rules. For example, “bivariant” subtyping means that functions and instances of
+polymorphic classes can be passed to contexts that do not preserve their typing invariants, as can
+be seen in the following erroneous example:
+
+var assertString = (x: string) => assert(typeof x === "string");
+var app = (f: (x: string | number) => void, x: number) => f(x);
+app(assertString, 1);
+A checker that implements sound contra-variant argument subtyping, like Flow, would signal an
+error at the call to app, since assertString is incompatible in its argument with the expected type
+for parameter f of app. In practice, this means that TypeScript developers have to code defensively
+with dynamic checks, even when types are included. Safe TypeScript [Rastogi et al. 2015] “fixes”
+soundness problems in TypeScript with stricter typing rules and runtime enforcement mechanisms
+to restore gradual typing.
+
+Dart [2011] is another language that shares the same philosophy. Unsoundness is a deliberate
+choice in TypeScript and Dart, motivated by the desire to balance convenience with bug-finding.
+But we have enough anecdotal evidence from developers at Facebook that focusing on soundness
+is not only useful but also desirable, and does not necessarily imply inconvenience. Similar to Safe
+TypeScript, recent work recovers soundness in Dart [Heinze et al. 2016].
+
+Closure [2009] is another widely used type system for JavaScript that focuses on transforming
+code for size reduction. As far as we can tell, it is sound modulo similar assumptions as Flow,
+but lacks type inference. Typed Racket [Tobin-Hochstadt and Felleisen 2008], and Hack [2014]
+(for PHP) are also quite close in spirit: their optional typing is at the level of modules and they
+use occurrence typing to perform similar kinds of refinements. They differ in that they lack type
+inference and, compared to Flow, their treatment of mutable variables is far more simplistic—there
+is no distinction between mutability on the stack and on the heap. On the other hand, Flow heavily
+borrows from Hack’s design and implementation for scaling to millions of lines of code.
+
+11.2
+Research Static Analysis for JavaScript
+
+Early work. Several static typing systems have successfully been ported to the dynamic setting of
+JavaScript. Early work by Thiemann [2005] and Anderson et al. [2005] focus on restricted subsets
+of the language.
+
+Type Refinement. In the area of type refinement, Guha et al. [2011] develop flow typing, which,
+like Flow, supports type narrowing as a consequence of control flow. Unlike Flow, their analysis
+is strictly intra-procedural, does not perform type inference and does not track non-local effects
+(e.g., variable updates). Building on this work, Lerner et al. [2013] present a framework for building
+type systems for JavaScript, engineered modularly to encourage experimentation, but which also
+suffers from limited type inference compared to Flow.
+
+Static Objects. Choi et al. [2015] propose a static type system for ahead-of-time compilation of
+JavaScript that guarantees fixed object layout. Its type inference is based on very similar foundations
+as Flow. SJS focuses mainly on taming legacy object-oriented features (constructor functions,
+
+"
+`;
+
+exports[`getPageText with large file Page [27 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+27
+
+open methods, and prototype inheritance). While Flow does support these features, its model
+and guarantees are different—it models these features with extensible objects, and guarantees
+type consistency of gets and sets of properties (but necessarily their existence). Many of these
+concepts are replaced by classes in “modern” (ES6+) JavaScript, where Flow can provide stronger
+guarantees with advanced type system features like bounded polymorphism, this types, and
+read-only properties. Chandra et al. [2016] build on this work by adding support for abstract objects,
+first-class methods, and recursive objects, and prove their extensions sound. Their type system
+supports additional features such as polymorphic arrays, operator overloading, and intersection
+types in manually-written interface descriptors for library code, that they found important for
+building GUI applications. Their formalization focuses on their object model. Unlike Flow, they do
+not discuss type refinement based on conditional checks, and their formalization is flow-insensitive,
+so less precise in that respect compared to Flow.
+
+Abstract Interpretation. This is a more heavyweight approach in statically analyzing JavaScript.
+Approaches here include TAJS [Andreasen and Møller 2014; Jensen et al. 2011, 2009, 2010], JSAI [Ka-
+shyap et al. 2014] and SAFE [Lee et al. 2012; Park and Ryu 2015]. These approaches vary in precision,
+user customizability and flow-, context- and path-sensitivity, but being whole-program analyses,
+they are out of scope at our scale, while being much more precise and not needing annotations.
+
+Program Logics. Recent advances in SMT solver technology has spurred the interest in using
+program logics to track the dynamic behavior of JavaScript programs. DJS [Chugh et al. 2012]
+combines nested refinements with alias types [Smith et al. 2000], a restricted separation logic, to
+account for aliasing and flow-sensitive heap updates to obtain a static type system for a large
+portion of JavaScript. DJS comes with very limited type inference and hence requires complex
+annotations at function and loop boundaries. To reduce this annotation burden, Vekris et al. [2016]
+offer refinement type inference for TypeScript, based on Liquid Type inference [Rondon et al. 2008].
+Their type system is more expressive than Flow’s as it allows logical predicates (taken from a
+number of decidable logics) to be attached on a base type system (a subset of TypeScript’s type
+system). However, this precision comes at the cost of a higher annotation burden and a penalty on
+scalability. Also, while offering global refinement type inference, unlike Flow it does not infer the
+base (underlying) types of programs and requires explicit immutability annotations.
+
+11.3
+Inference and Subtyping in Dynamic Languages
+
+Constrained Types. Set constraints have been used for the purpose of type inference by Aiken and
+Wimmers [1992] and Aiken et al. [1994], who adopt the set-theoretic model to infer types in a simple
+functional language. Trifonov and Smith [1996] and Pottier [1998] infer polymorphic recursively
+constrained types, but retain a simpler interpretation of type terms. In their work, ground types
+are regular terms, and subtyping is defined explicitly on terms. This enables various simplifications
+to their constraint sets, like garbage collection [Eifrig et al. 1995; Pottier 1998, 2001]. Flanagan and
+Felleisen [1999] use a simpler type representation and, based on simplification algorithms that
+exploit the observable equivalence of constraint sets, perform componential set-based analysis.
+Flow builds directly on work by Pottier [2001], but does not infer polymorphic types. Instead, it
+exposes features less frequently addressed in the context of set-constraint based analyses, such as
+variable updates and type refinement based on conditional checks. In addition, Flow’s analysis is
+not context-sensitive, due in part to anecdotal concerns about performance in DoctorJS [Vardoulakis
+2012]. In practice, polymorphic type annotations recover context-sensitivity where needed.
+
+Constraint Graph Simplification. The research directions above already include several simplifi-
+cation techniques [Fähndrich and Aiken 1996; Flanagan 1997]. To further improve performance of
+
+"
+`;
+
+exports[`getPageText with large file Page [28 / 58] - should get the page text 1`] = `
+"28
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+inclusion constraint analyses, Fähndrich et al. [1998] propose a technique for eliminating cycles in
+constraint graphs that is based on a non-standard graph representation called inductive form, and
+only traverses part of the paths during the search for cycles. To address the problem of redundant
+paths in a constraint graph, Su et al. [2000] propose projection merging, a technique intended to
+be used in conjunction with the above. In contrast, we directly implement unification constraints
+using union-find over a base representation of inclusion constraints.
+
+Semantic and Algebraic Subtyping. Advances in semantic and algebraic foundations have spurred
+renewed interest in this rich area. Semantic subtyping has been proposed in the context of functional
+languages for XML based programming [Frisch et al. 2008], ML-like languages [Castagna et al. 2016],
+and more recently for imperative object-oriented languages, where fields can be mutable [Ancona
+and Corradi 2016], and in a gradual typing setting [Castagna and Lanvin 2017]. Even though
+polymorphic type inference with subtyping is known to be undecidable [Su et al. 2002], Dolan
+and Mycroft [2017] infer compact principal types by keeping a strict separation between the types
+used to describe inputs and those used to describe outputs (polarities). In comparison, Flow is less
+ambitious with union and intersection types.
+
+12
+LIMITATIONS AND THREATS TO VALIDITY
+
+We conclude this paper by discussing limitations and threats to validity.
+Flow’s analysis is cubic in the worst case. Although pathological examples are not entirely
+uncommon, we have so far been able to mitigate them with low-hanging optimizations.
+Its analysis is context-insensitive, and also not well-suited for libraries with reflection. Many
+libraries provide annotations without checked implementations, so we can typecheck the vast
+majority of code that uses these libraries. Better techniques for checking libraries (e.g., TAJS) can
+complement Flow.
+Like many other type systems for dynamically typed languages, Flow has the any type, with
+which type checking can be completely bypassed. Unlike gradual type systems, though, there is no
+runtime enforcement of types when they interact with any. For sound gradual typing, the subtyping
+rules can be augmented to mark all type constructors as either trusted or untrusted.
+Even without any, some aspects of JavaScript force us into choosing unsoundness where it is
+objectively justified. We can lay down the conditions for soundness, but not enforce them. For
+example, arrays in JavaScript can have “holes”: it is possible to add an element out of bounds, in
+which case any intermediate positions are filled with undefined. Likewise, records in JavaScript
+can also be accessed as dictionaries, so it is possible to read and write a named property by passing
+a computed string. Short of complicated numeric and string analysis, soundness would demand
+that we lose type information on array dereferences and dictionary reads, but this is too restrictive
+in practice. Instead we hope that developers who care about soundness will not create arrays
+with holes (e.g., by always using Array.push to add elements), or will check for undefined on
+dereferences when needed; and the properties that are named and those that are accessed via
+computed strings are disjoint.
+
+ACKNOWLEDGMENTS
+
+Thanks to Basil Hosmer, Jeff Morrison, Nat Mote, Satish Chandra, Caleb Meredith, and James Kyle
+for their contributions to Flow’s design and implementation, to Julien Verlaguet, Dwayne Reeves,
+and Yoann Padioleau for their work on infrastructure that Flow is built on, and to anonymous
+reviewers for their valuable feedback on previous drafts of this paper.
+
+"
+`;
+
+exports[`getPageText with large file Page [29 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+29
+
+REFERENCES
+
+Alexander Aiken and Edward L. Wimmers. 1992. Solving systems of set constraints. Proceedings of the Seventh Annual
+IEEE Symposium on Logic in Computer Science (1992), 329–340. http://ieeexplore.ieee.org/lpdocs/epic03/wrapper.htm?
+arnumber=185545
+
+Alexander Aiken, Edward L. Wimmers, and T. K. Lakshman. 1994. Soft Typing with Conditional Types. In Proceedings of the
+21st ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL ’94). ACM, New York, NY, USA,
+163–173.
+
+Davide Ancona and Andrea Corradi. 2016. Semantic subtyping for imperative object-oriented languages. Proceedings of the
+2016 ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications -
+OOPSLA 2016, 568–587.
+
+Christopher Anderson, Paola Giannini, and Sophia Drossopoulou. 2005. Towards Type Inference for Javascript. In Proceedings
+of the 19th European Conference on Object-Oriented Programming (ECOOP’05). Springer-Verlag, Berlin, Heidelberg, 428–
+452.
+
+Esben Andreasen and Anders Møller. 2014. Determinacy in Static Analysis for jQuery. In Proceedings of the 2014 ACM
+International Conference on Object Oriented Programming Systems Languages & Applications (OOPSLA ’14). ACM, New
+York, NY, USA, 17–31.
+
+Gavin Bierman, Martín Abadi, and Mads Torgersen. 2014. Understanding TypeScript. In ECOOP 2014 – Object-Oriented
+Programming: 28th European Conference, Uppsala, Sweden, July 28 – August 1, 2014. Proceedings, Richard Jones (Ed.).
+Springer Berlin Heidelberg, Berlin, Heidelberg, 257–281.
+
+Giuseppe Castagna and Victor Lanvin. 2017. Gradual Typing with Union and Intersection Types. In Proceedings of ICFP.
+Giuseppe Castagna, Tommaso Petrucciani, and Kim Nguyen. 2016. Set-theoretic Types for Polymorphic Variants. In
+Proceedings of the 21st ACM SIGPLAN International Conference on Functional Programming (ICFP 2016). ACM, New York,
+NY, USA, 378–391.
+
+Satish Chandra, Colin S. Gordon, Jean-Baptiste Jeannin, Cole Schlesinger, Manu Sridharan, Frank Tip, and Youngil Choi. 2016.
+Type Inference for Static Compilation of JavaScript. In Proceedings of the 2016 ACM SIGPLAN International Conference on
+Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA 2016). ACM, New York, NY, USA, 410–429.
+
+Wontae Choi, Satish Chandra, George C. Necula, and Koushik Sen. 2015. SJS: A Type System for JavaScript with Fixed
+Object Layout. In SAS (Lecture Notes in Computer Science), Vol. 9291. Springer, 181–198.
+
+Ravi Chugh, David Herman, and Ranjit Jhala. 2012. Dependent Types for JavaScript. In Proceedings of the ACM International
+Conference on Object Oriented Programming Systems Languages and Applications (OOPSLA ’12). ACM, New York, NY,
+USA, 587–606.
+
+Closure. 2009. Closure Compiler. https://developers.google.com/closure/compiler/. (2009). Accessed: 2016-11-15.
+Yann Collet. 2011. LZ4-Extremely fast compression. (2011). https://github.com/lz4/lz4.
+Dart. 2011. Dart Language Specification. https://www.dartlang.org/guides/language/spec. (2011). Accessed: 2016-11-15.
+Stephen Dolan and Alan Mycroft. 2017. Polymorphism, Subtyping, and Type Inference in MLsub. In Proceedings of the 44th
+ACM SIGPLAN Symposium on Principles of Programming Languages - POPL 2017. ACM Press, New York, New York, USA,
+60–72.
+
+Jonathan Eifrig, Scott Smith, and Valery Trifonov. 1995. Sound Polymorphic Type Inference for Objects. SIGPLAN Not. 30,
+10 (Oct. 1995), 169–184.
+
+Manuel Fähndrich and Alex Aiken. 1996. Making Set-Constraint Program Analyses Scale. Technical Report. Berkeley, CA,
+USA.
+
+Manuel Fähndrich, Jeffrey S. Foster, Zhendong Su, and Alexander Aiken. 1998. Partial Online Cycle Elimination in
+Inclusion Constraint Graphs. In Proceedings of the ACM SIGPLAN 1998 Conference on Programming Language Design and
+Implementation (PLDI ’98). ACM, New York, NY, USA, 85–96.
+
+Cormac Flanagan. 1997. Effective Static Debugging via Componential Set-Based Analysis. Ph.D. Dissertation. Rice University.
+Cormac Flanagan and Matthias Felleisen. 1999. Componential Set-based Analysis. ACM Trans. Program. Lang. Syst. 21, 2
+(March 1999), 370–416.
+
+Alain Frisch, Giuseppe Castagna, and Véronique Benzaken. 2008. Semantic Subtyping: Dealing Set-theoretically with
+Function, Union, Intersection, and Negation Types. J. ACM 55, 4, Article 19 (Sept. 2008), 64 pages.
+
+Arjun Guha, Claudiu Saftoiu, and Shriram Krishnamurthi. 2011. Typing Local Control and State Using Flow Analysis. In
+Proceedings of the 20th European Conference on Programming Languages and Systems: Part of the Joint European Conferences
+on Theory and Practice of Software (ESOP’11/ETAPS’11). Springer-Verlag, Berlin, Heidelberg, 256–275.
+
+Hack. 2014. Hack Language Specification. https://github.com/hhvm/hack-langspec. (2014). Accessed: 2016-11-15.
+Thomas S. Heinze, Anders Møller, and Fabio Strocco. 2016. Type Safety Analysis for Dart. In Proceedings of the 12th
+Symposium on Dynamic Languages (DLS 2016). ACM, New York, NY, USA, 1–12.
+
+Simon Holm Jensen, Magnus Madsen, and Anders Møller. 2011. Modeling the HTML DOM and Browser API in Static
+Analysis of JavaScript Web Applications. In Proceedings of the 19th ACM SIGSOFT Symposium and the 13th European
+
+"
+`;
+
+exports[`getPageText with large file Page [30 / 58] - should get the page text 1`] = `
+"30
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Conference on Foundations of Software Engineering (ESEC/FSE ’11). ACM, New York, NY, USA, 59–69.
+
+Simon Holm Jensen, Anders Møller, and Peter Thiemann. 2009. Type analysis for JavaScript. Lecture Notes in Computer
+Science (including subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics) 5673 LNCS (2009),
+238–255.
+
+Simon Holm Jensen, Anders Møller, and Peter Thiemann. 2010. Interprocedural Analysis with Lazy Propagation. In
+Proceedings of the 17th International Conference on Static Analysis (SAS’10). Springer-Verlag, Berlin, Heidelberg, 320–339.
+
+Vineeth Kashyap, Kyle Dewey, Ethan A. Kuefner, John Wagner, Kevin Gibbons, John Sarracino, Ben Wiedermann, and Ben
+Hardekopf. 2014. JSAI: A Static Analysis Platform for JavaScript. In Proceedings of the 22Nd ACM SIGSOFT International
+Symposium on Foundations of Software Engineering (FSE 2014). ACM, New York, NY, USA, 121–132.
+
+Hongki Lee, Sooncheol Won, Joonho Jin, Junhee Cho, and Sukyoung Ryu. 2012. SAFE: Formal specification and implemen-
+tation of a scalable analysis framework for ECMAScript. In International Workshop on Foundations of Object-Oriented
+Languages (FOOL), Vol. 10.
+
+Benjamin S. Lerner, Joe Gibbs Politz, Arjun Guha, and Shriram Krishnamurthi. 2013. TeJaS: Retrofitting Type Systems for
+JavaScript. Proceedings of the 9th symposium on Dynamic languages - DLS ’13, 1–16.
+
+Changhee Park and Sukyoung Ryu. 2015. Scalable and Precise Static Analysis of JavaScript Applications via Loop-
+Sensitivity. In 29th European Conference on Object-Oriented Programming (ECOOP 2015) (Leibniz International Proceedings
+in Informatics (LIPIcs)), John Tang Boyland (Ed.), Vol. 37. Schloss Dagstuhl–Leibniz-Zentrum fuer Informatik, Dagstuhl,
+Germany, 735–756.
+
+François Pottier. 1998. Type Inference in the Presence of Subtyping: from Theory to Practice. Research Report 3483. INRIA.
+
+http://hal.inria.fr/docs/00/07/32/05/PDF/RR-3483.pdf
+
+François Pottier. 2001. Simplifying Subtyping Constraints: a Theory. Information & Computation 170, 2 (Nov. 2001), 153–183.
+Aseem Rastogi, Nikhil Swamy, Cédric Fournet, Gavin Bierman, and Panagiotis Vekris. 2015. Safe & Efficient Gradual Typing
+for TypeScript. In Proceedings of the 42Nd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming
+Languages (POPL ’15). ACM, New York, NY, USA, 167–180.
+
+Patrick M. Rondon, Ming Kawaguci, and Ranjit Jhala. 2008. Liquid Types. In Proceedings of the 29th ACM SIGPLAN Conference
+on Programming Language Design and Implementation (PLDI ’08). ACM, New York, NY, USA, 159–169.
+
+Frederick Smith, David Walker, and J. Gregory Morrisett. 2000. Alias Types. In Proceedings of the 9th European Symposium
+on Programming Languages and Systems (ESOP ’00). Springer-Verlag, London, UK, UK, 366–381.
+
+Zhendong Su, Alexander Aiken, Joachim Niehren, Tim Priesnitz, and Ralf Treinen. 2002. The First-order Theory of Subtyping
+Constraints. In Proceedings of the 29th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL
+’02). ACM, New York, NY, USA, 203–216.
+
+Zhendong Su, Manuel Fähndrich, and Alexander Aiken. 2000. Projection Merging: Reducing Redundancies in Inclusion
+Constraint Graphs. In Proceedings of the 27th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages
+(POPL ’00). ACM, New York, NY, USA, 81–95.
+
+Peter Thiemann. 2005. Towards a Type System for Analyzing Javascript Programs. In Proceedings of the 14th European
+Conference on Programming Languages and Systems (ESOP’05). Springer-Verlag, Berlin, Heidelberg, 408–422.
+
+Sam Tobin-Hochstadt and Matthias Felleisen. 2008. The Design and Implementation of Typed Scheme. In Proceedings of the
+35th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL ’08). ACM, New York,
+NY, USA, 395–406.
+
+Valery Trifonov and Scott Smith. 1996. Subtyping Constrained Types. SAS ’96: Proceedings of the 3rd International Symposium
+on Static Analysis (1996), 349–365.
+
+TypeScript. 2012. TypeScript Design Goals. https://github.com/Microsoft/TypeScript/wiki/TypeScript-Design-Goals. (2012).
+Accessed: 2016-11-15.
+
+Dimitris Vardoulakis. 2012. CFA2: Pushdown Flow Analysis for Higher-Order Languages. Ph.D. Dissertation. Northeastern
+University.
+
+Panagiotis Vekris, Benjamin Cosman, and Ranjit Jhala. 2016. Refinement Types for TypeScript. In Proceedings of the 37th
+ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI ’16). ACM, New York, NY, USA,
+310–325.
+
+A.K. Wright and M. Felleisen. 1994. A Syntactic Approach to Type Soundness. Inf. Comput. 115, 1 (Nov. 1994), 38–94.
+
+"
+`;
+
+exports[`getPageText with large file Page [31 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+31
+
+Appendices
+
+These appendices contain material that was omitted from the main paper. All definitions that are
+included in the main paper also hold here. In addition we introduce ground types (the model upon
+which our types are based), substitutions and subtyping, as well as a brief note on polarities that
+were mentioned in the main paper. We also include typing for our language’s runtime, and proofs
+of soundness of the inference of our system with respect to the declarative system introduced in
+the main paper and the type safety of the declarative system.
+
+A
+TYPES
+
+In this section we include a discussion on ground types which is the model that the types described
+in Section 2 are based on. We then provide some more context on the notion of polarity that was
+alluded to during the discussion about constraint propagation (Section 3.2). Finally, we define
+notions related to type subsumption as they are going to be useful for the statement of lemmas and
+theorems moving forward.
+
+A.1
+Ground Types
+At the basis of the type language described in Section 2.2 is the notion of ground types. The
+formulation of our ground type language follows the one presented by Pottier [1998]. Here we will
+focus on the changes we made to adapt that formulation to our system’s needs. Ground types in
+our system are regular trees. The formal definition is similar to Pottier [1998, Definition 1.1] but
+our ground signature Σд contains the terminals b and → for types and the terminals ⊥ and the
+set of program variables X for effects. Also → has arity 3 to also account for the function’s effect,
+whose position is co-variant.
+
+Ground Substitutions. We connect the notion of types that were introduced in Section 2.2 with
+ground types using the notion of ground substitutions ρ.
+
+Definition A.1 (Ground Substitution). A ground substitution ρ (we will also refer to it as solution)
+
+is a total mapping from type variables to ground types.
+
+A ground substitution can be applied to types by recursively applying the substitution to the
+parts of the type, replacing type variables with their ground type mapping.
+As regular trees, ground types can be infinite structures, whereas the types we introduced in the
+main part are finite, but crucially include type variables. This means that a finite, yet recursively
+defined, type may correspond (through a substitution) to an infinite ground type.
+
+A.2
+Ground Subtyping
+
+Because of their infinite nature defining a subtyping relation on ground types requires some special
+treatment. Here, we define an ordering on ground types by quantifying over paths in the regular
+trees that represent types. The symbol ≤k denotes subtyping up to level k. The definition is similar
+to Pottier [1998, Definition 1.5]. For the case of effects, ≤0 is reflexive and ⊥ is the minimum element.
+The definition of the subtyping relation ≤ over ground types follows Pottier [1998, Definition 1.4]
+and as in Pottier [1998, Proposition 1.3], τ ≤ τ ′ is equivalent to:
+
+∀k ≥ 0 .τ ≤k τ ′
+
+"
+`;
+
+exports[`getPageText with large file Page [32 / 58] - should get the page text 1`] = `
+"32
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Equipping our ground alphabet with ⊥ and ⊤ for types, and ⊤ for effects (we have omitted them
+from our formulation to avoid clutter), and using the subtyping relation, our ground types can form
+a lattice. The proof follows Pottier [1998, Proposition 1.3].
+
+Effects. The subtyping relation is extended to ground effects as well (we also refer to them as
+concrete effects). Concrete effects can be interpreted as sets of variables and so effect subtyping
+corresponds to the subset relation.
+
+Environments. In the following we assume that applying a substitution ρ to an environment Γ of
+the constraint generation system returns a pair containing two environments:
+
+• a concrete flow-sensitive environment ∆ binding variables to ground types in a flow-sensitive
+manner (i.e. types that correspond to the base of the entries in Γ), and
+
+• a general environment G binding variables to ground types corresponding to the general type
+of each entry in Γ.
+
+We write this as:
+ρ (Γ) = ∆; G
+
+We also use indexes as subscripts to retrieve the first or second part of the above pair:
+
+ρ (Γ)1 = ∆
+ρ (Γ)2 = G
+
+The subtyping relation is extended to ∆ and G in a point-wise manner.
+Note that this is different that the notation we used in the main paper where we kept type entries
+of the form τ τ ′. We made this change with the hope that it removes unnecessary clutter from our
+formalization.
+
+A.3
+Constraint Satisfaction
+
+The following definitions relate ground substitutions with constraint sets.
+
+Definition A.2 (Constraint Satisfaction). We say that a ground substitution ρ satisfies a constraint
+
+c, and we write ρ ⊢ c, if the corresponding subtyping relation(s) in the right hand side of the
+
+definitions below hold(s):
+
+ρ ⊢ τ ≤ α
+�
+ρ (τ) ≤ ρ (α)
+
+ρ ⊢ τ ≤ Call(τ1
+ε−→ τ2)
+�
+ρ (τ) ≤ ρ
+�
+τ1
+ε−→ τ2
+�
+
+ρ ⊢ τ ≤ Pred(P, τ ′)
+�
+ρ (τ :: P) ≤ ρ (τ ′)
+
+ρ ⊢ τ ≤ Get ({f : τ ′})
+�
+ρ (τ) ≤ ρ ({f : τ ′})
+
+ρ ⊢ τ ≤ Set ({f : τ ′})
+�
+ρ (τ) ≤ ρ ({f : τ ′})
+
+ρ ⊢ ε ≤ ω
+�
+ρ (ε) ≤ ρ (ω)
+
+ρ ⊢ ε ≤ Havoc (Γ)
+�
+∀x ∈ ρ (ε) . G(x) ≤ ∆(x)
+
+where ρ (Γ) = ∆; G
+
+Definition A.3 (Constraint Set Satisfaction under Substitution). We say that a ground substitution
+
+ρ satisfies a constraint set C, and we write ρ ⊢ C, if for all c of C it holds that ρ ⊢ c.
+
+The following proposition connects constraint set consistency that was discussed in Section 3.3
+
+with constraint satisfiability under ground substitution defined above.
+
+"
+`;
+
+exports[`getPageText with large file Page [33 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+33
+
+Expression Typing
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ n: bn; ⊥; ∅
+
+⊩
+
+∆
+[T-Const]
+∆(x) = τ
+
+∆; G ⊩ x : τ; ⊥; x �→ truthy
+
+⊩
+
+∆
+[T-Var]
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ x =e : τ; ε ⊔ x; ψ\\x
+
+⊩
+
+∆′[x �→ τ ]
+[T-Assign]
+
+eraseG(∆), x : τ, locals(s); G ⊩ {s; return e}: τ ′; ε
+
+⊩
+
+∆′
+
+∆; G ⊩ (x) ⇒ {s; return e}: τ
+ε\\x
+−−−→ τ ′; ⊥; ∅
+
+⊩
+
+∆
+
+[T-Fun]
+
+∆; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆1
+∆1; G ⊩ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+τ1 ≤ τ2
+ε−→ τ
+∆′ = eraseε
+G (∆2)
+
+∆; G ⊩ e1(e2): τ; ε1 ⊔ ε2 ⊔ ε; ∅
+
+⊩
+
+∆′
+[T-Call]
+
+Fig. 15. Expression Typing in FlowCore (Variables and Functions)
+
+Proposition A.4 (Constraint Set Satisfaction). A (saturated) constraint set C is satisfiable,
+
+iff there exists ground substitution ρ s.t. ρ ⊢ C.
+
+A.4
+Polarities
+
+In Section 3.2, we introduced Rule CP-P-Trans that contained the notion of a “positive type hole”.
+To define this formally we first introduce polar types, which can be positive or negative. A positive
+type τ + is a type used to to describe outputs, whereas a negative type τ − describes inputs. Similar
+definitions hold for effects (ε+ and ε−). Formally:
+
+τ +
+::= b | τ −
+1
+ε+
+−−→ τ +
+2 |
+�
+f1 : τ +
+1 , . . . , fn : τ +
+n
+�
+| α | τ +
+1 ⊔ τ +
+2
+
+τ −
+::= b | τ +
+1
+ε−
+−−→ τ −
+2 |
+�
+f1 : τ −
+1 , . . . , fn : τ −
+n
+�
+| α
+
+ε+
+::= ⊥ | x | ω | ε+
+1 ⊔ ε+
+2
+ε−
+::= ⊥ | x | ω
+
+With this in mind we now define a type context t as a type that contains a hole ⟨ ⟩ in one of its
+leafs. Type contexts also come in two flavors:
+
+t+
+::= b | t−
+1
+ε+
+−−→ t+
+2 |
+�
+f1 : t+
+1 , . . . , fn : t+
+n
+�
+| α | t+
+1 ⊔ t+
+2 | ⟨⟩
+
+t−
+::= b | t+
+1
+ε−
+−−→ t−
+2 |
+�
+f1 : t−
+1 , . . . , fn : t−
+n
+�
+| α
+
+The critical part in the above definition is that negative contexts t− do not contain joins at their
+top-levels.
+
+"
+`;
+
+exports[`getPageText with large file Page [34 / 58] - should get the page text 1`] = `
+"34
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Expression Typing
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆1
+∆1 :: ψ1; G ⊩ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+τ = τ1 :: falsy ⊔ τ2
+ε = ε1 ⊔ ε2
+ψ = (ψ1\\ε2) ∧ψ2
+∆′ = (∆1 :: ¬ψ1) ⊔ ∆2
+
+∆; G ⊩ e1 &&e2 : τ; ε; ψ
+
+⊩
+
+∆′
+[T-And]
+
+∆; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆1
+∆1 :: ¬ψ1; G ⊩ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+τ = τ1 :: truthy ⊔ τ2
+ε = ε1 ⊔ ε2
+ψ = (ψ1\\ε2) ∨ψ2
+∆′ = (∆1 :: ψ1) ⊔ ∆2
+
+∆; G ⊩ e1 ||e2 : τ; ε; ψ
+
+⊩
+
+∆′
+[T-Or]
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ !e : bool; ε; ¬ψ
+
+⊩
+
+∆′ [T-Not]
+∆; G ⊩ p(x): bool; ⊥; x �→ p
+
+⊩
+
+∆
+[T-Pred]
+
+∆ ≡ ∆0
+∀i ∈ [1,n] . ∆i−1; G ⊩ ei : τi; εi; ψi
+
+⊩
+
+∆i
+∀i ∈ [1,n] .τi ≤ τ ′
+i
+
+∆; G ⊩ {f1:e1, . . . , fn:en}:
+�
+f1 : τ ′
+1, . . . , fn : τ ′
+n
+�
+;
+
+�n
+
+i=1εi; ∅
+
+⊩
+
+∆n
+[T-Rec]
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+τ ≤ {f : τ ′}
+
+∆; G ⊩ e.f: τ ′; ε; ∅
+
+⊩
+
+∆′
+[T-FldRd]
+
+∆; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆1
+τ1 ≤ {f : τf}
+∆1; G ⊩ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+τ2 ≤ τf
+
+∆; G ⊩ e1.f = e2 : τ2; ε1 ⊔ ε2; ψ2
+
+⊩
+
+∆2
+[T-FldWr]
+
+Fig. 16. Expression Typing in FlowCore (Logical Operators and Records)
+
+B
+DECLARATIVE TYPE SYSTEM
+
+In Figures 15, 16 and 17 we define a declarative type system that assigns types to expressions and
+statements of FlowCore. The typing judgments for expressions and statements are:
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+∆; G ⊩ s : ε
+
+⊩
+
+∆′
+
+Here types τ are identical in structure to the types introduced for the inference system but are
+concrete, i.e. there contain no type variables. As mentioned earlier, environments ∆ bind variables
+x to types τ (instead of type entries containing both a precise and a general type). The most general
+type for each variable is included in environment G– a flow-insensitive structure that gathers the
+most general type (globally) for each variable across the entire program. Thanks to α-renaming
+each defined variable to a unique name, there is no ambiguity among variable identifiers.
+Effects ε are also concrete in this declarative system. This means that they can now be directly
+interpreted as sets of variables (since no effect variables are presents).
+We use the shorthand eraseG(∆) to denote the erasure of an environment ∆ with the types of
+G. This operation effectively creates a new environment binding all variables in ∆ to their bound
+types in G. We also introduce the variant eraseε
+G (∆), where ε is a concrete effect, to denote the
+environment ∆[x �→ G(x) | x ∈ ε ].
+Environment join (⊔) and environment refinement (::) have similar definitions as in their con-
+straint generation counterparts of Figure 5, and so are omitted here.
+
+"
+`;
+
+exports[`getPageText with large file Page [35 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+35
+
+Statement Typing
+∆; G ⊩ s : ε
+
+⊩
+
+∆′
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ e : ε
+
+⊩
+
+∆′
+[T-Exp]
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+∆; G ⊩ var x =e : ε ⊔ x
+
+⊩
+
+∆′[x �→ τ ]
+[T-VarDecl]
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+∆′ :: ψ; G ⊩ s1 : ε1
+
+⊩
+
+∆′
+1
+∆′ :: ¬ψ; G ⊩ s2 : ε2
+
+⊩
+
+∆′
+2
+
+∆; G ⊩ if (e) {s1} else {s2}: ε ⊔ ε1 ⊔ ε2
+
+⊩
+
+∆′
+1 ⊔ ∆′
+2
+[T-If]
+
+∆; G ⊩ s1 : ε1
+
+⊩
+
+∆1
+∆1; G ⊩ s2 : ε2
+
+⊩
+
+∆2
+
+∆; G ⊩ s1;s2 : ε1 ⊔ ε2
+
+⊩
+
+∆2
+[T-Seq]
+
+Fig. 17. Statement Typing in FlowCore
+
+C
+RUNTIME TYPING
+
+Stating a progress and preservation theorem requires us to extend the notion of well-typed expres-
+sions and statements to runtime configurations.
+
+C.1
+Term Typing
+
+Expressions & Statements. First we extend typing to runtime expressions. The judgment form is
+similar to the one for static expressions with the difference that we have to include locations ℓ in
+the set of typeable expressions. To do that we equip our judgment with an additional argument,
+the heap typing Σ, defined as:
+Σ ::= · | Σ, ℓ: τ
+
+The expression typing judgment becomes:
+
+∆; G ⊩Σ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+Extending the rules for expression typing in Figures 15 and 16 to runtime expressions is straight-
+forward. An important addition is the rule for location ℓ typing:
+
+Σ(ℓ) = τ
+
+∆; G ⊩Σ ℓ: τ; ⊥; ∅
+
+⊩
+
+∆
+[T-Loc]
+
+Similarly the form of typing runtime statements is extended to:
+
+∆; G ⊩Σ s : ε
+
+⊩
+
+∆′
+
+Evaluation Contexts. A more interesting situation arises when we try to extend the judgment
+to evaluation contexts E. The main issue here is that the object under judgment contains a “hole”
+where another expression is expected to appear. To address this we include a “hole” in the type
+structure of the return type to host the type of the term that is expected to fill in the hole of the
+evaluation context. The linked effect and predicate are handled in a similar fashion:
+
+∆; G ⊩Σ E: τ ′⟨τ⟩; ε′⟨ε⟩; ψ ′⟨ψ⟩
+
+⊩
+
+∆′
+
+Figure 18 contains a selection of rules for this judgment.
+When inverting typing relations, we often need to decompose the typing of filled evaluation
+contexts E⟨e⟩. The following lemma deconstructs the typing of such an expression to the typing of
+a bare evaluation context E and a typing of the filling expression e.
+
+"
+`;
+
+exports[`getPageText with large file Page [36 / 58] - should get the page text 1`] = `
+"36
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Evaluation Context Typing Rules (selected)
+∆; G ⊩Σ E: τ ′⟨τ⟩; ε′⟨ε⟩; ψ ′⟨ψ⟩
+
+⊩
+
+∆′
+
+∆; G ⊩Σ ⟨⟩ : ⟨⟩; ⟨⟩; ⟨⟩
+
+⊩
+
+∆
+[Ectx-Hole]
+
+∆; G ⊩Σ E: τ ′
+1⟨τ1⟩; ε′
+1⟨ε1⟩; ψ ′
+1⟨ψ1⟩
+
+⊩
+
+∆1
+∆1; G ⊩ e : τ2; ε2; ψ2
+
+⊩
+
+∆2
+τ ′
+1 ≤ τ2
+ε−→ τ
+∆′ = eraseε
+G (∆2)
+
+∆; G ⊩Σ E(e): τ ⟨τ1⟩; ε′
+1⟨ε1⟩ ⊔ ε2 ⊔ ε; ∅⟨ψ1⟩
+
+⊩
+
+∆′
+[Ectx-Call]
+
+Fig. 18. Evaluation Context Typing in FlowCore
+
+Lemma C.1 (Decomposing Evaluation Context Typing). If
+
+∆; G ⊩Σ E⟨e⟩ : τ; ε; ψ
+
+⊩
+
+∆′′
+
+then there exist τ ′, ε′, ψ ′ and ∆′ s.t.
+
+(a) ∆; G ⊩Σ e : τ ′; ε′; ψ ′
+
+⊩
+
+∆′
+
+(b) ψ ′ = ∅ =⇒ ∆′; G ⊩Σ E: τ ⟨τ ′⟩; ε⟨ε′⟩; ψ ⟨ψ ′⟩
+
+⊩
+
+∆′′
+
+Proof. By examining all possible cases of typing evaluation contexts E, we will always type the
+
+expression e in the “hole” first and then the evaluation context E.
+□
+
+C.2
+Configuration Typing
+
+A runtime configuration in FlowCore contains the runtime state, that itself comprises a heap H, a
+stack X and a store L, and a program term. Typing configurations amounts to typing their subparts.
+Before we move on to that we define two auxiliary functions.
+
+Auxiliary Functions. The first one is the environment composition M ◦ N. This operation works
+in the usual way. The range of environment N needs to be compatible with the domain of M,
+otherwise the result is undefined:
+
+(M ◦ N)(x) =
+
+�
+M(N(x))
+if X ∈ dom(N) and N(x) ∈ dom(M)
+undefined
+otherwise
+
+The second operator is the environment override M ⊕ N. This operator produces an environment
+whose domain is the union of the domains of the two arguments. For each one of its arguments the
+override first attempts to return a binding by looking it up in environment M; if this fails it tries N;
+and finally returns undefined if it fails there as well.
+
+(M ⊕ N)(x) =
+
+
+
+
+
+M(x)
+if x ∈ dom(M)
+N(x)
+if x ∈ dom(N) \\ dom(M)
+undefined
+otherwise
+
+Stack. The form of the stack is reminiscent of the evaluation context, so the judgment we use
+here has the following form:
+G ⊩Σ X: τ ⟨τ ′⟩
+
+Figure 19 contains the rules for this judgment. The interesting rule here is Rule RT-Stack-C, that
+types a stack X, L.E. Following the flow of execution the rule first checks the frame E that is on
+
+"
+`;
+
+exports[`getPageText with large file Page [37 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+37
+
+Stack Typing Rules
+G ⊩Σ X: τ ′⟨τ⟩
+
+G ⊩Σ ·: τ ⟨τ⟩
+[RT-Stack-E]
+
+∆ = Σ ◦ L
+∆; G ⊩ E: τ ′⟨τ⟩
+
+⊩
+
+∆′
+Σ′ = ∆′ ◦ L−1 ⊕ Σ
+G ⊩Σ′ X: τ ′′⟨τ ′⟩
+
+G ⊩Σ X, L.E: τ ′′⟨τ⟩
+[RT-Stack-C]
+
+Fig. 19. Runtime Stack Typing in FlowCore
+
+Heap Typing Rules
+G ⊩Σ H
+
+G ⊩Σ ·
+[RT-Heap-E]
+ℓ′ ∈ dom(H)
+G ⊩Σ H
+Σ(ℓ) = Σ(ℓ′)
+
+G ⊩Σ H, ℓ �→ ℓ′
+[RT-Heap-Loc]
+
+G ⊩Σ H
+Σ(ℓ) = bn
+
+G ⊩Σ H, ℓ �→ n
+[RT-Heap-Const]
+
+G ⊩Σ H
+Σ(ℓ) = τ
+∆ = Σ ◦ L
+∆; G ⊩ (x) ⇒ {s; return e}: τ; ⊥; ∅
+
+⊩
+
+∆
+
+G ⊩Σ H, ℓ �→ ⟨L, (x) ⇒ {s; return e}⟩
+[RT-Heap-Fun]
+
+G ⊩Σ H
+Σ(ℓ) = {f1 : τ1, . . . , fn : τn}
+∀i ∈ [1,n] . ∆; G ⊩Σ vi : τ ′
+i ; ⊥; ∅
+
+⊩
+
+∆
+∀i ∈ [1,n] .τ ′
+i ≤ τi
+
+G ⊩Σ H, ℓ �→ {f1:v1, . . . , fn:vn}
+[RT-Heap-Rec]
+
+Fig. 20. Heap Typing in FlowCore
+
+the top of the stack and then proceeds with the remaining stack X. What is interesting here is
+the construction of the environment used for checking X. Assume ∆′ the output environment
+after checking E. This environment contains the most recent updates of all the variables that were
+assigned to in E. Our goal here is to construct an accurate heap typing Σ′ that corresponds to the
+state of the heap at the end of E. This heap typing will subsequently be used to check X. To do that,
+for every variable x such that x : ℓ ∈ L, i.e. in scope at the beginning of E, we require its type to be
+looked up in ∆′. This amounts to ∆′ ◦ L−1. The rest will just be looked up in the incoming Σ.
+
+Heap. Figure 20 shows the rules for checking a heap H against a heap typing Σ. The most
+interesting case here is that of record typing by Rule RT-Heap-Rec. This rule infers a type for each
+value vi stored at some field of the record and then unifies this type with the type of each field
+specified in the store typing Σ.
+
+Configuration. Finally, Figure 21 shows the typing rules for runtime configurations where the
+terms are either expressions, function bodies or statements. These largely follow the same principles
+as the typing for stacks that we saw earlier.
+
+"
+`;
+
+exports[`getPageText with large file Page [38 / 58] - should get the page text 1`] = `
+"38
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Runtime Configuration Typing
+G ⊩Σ S; M : τ
+G ⊩Σ S; s
+
+G ⊩Σ H
+∆ = Σ ◦ L
+∆; G ⊩Σ M : τ; ε
+
+⊩
+
+∆′
+Σ′ = ∆′ ◦ L−1 ⊕ Σ
+G ⊩Σ′ X: τ ′⟨τ⟩
+
+G ⊩Σ ⟨H; X; L⟩; M : τ ′
+[RT-Conf-B]
+
+G ⊩Σ H
+∆ = Σ ◦ L
+∆; G ⊩Σ s : ε
+
+⊩
+
+∆′
+Σ′ = ∆′ ◦ L−1 ⊕ Σ
+G ⊩Σ′ X: τ ′⟨τ⟩
+
+G ⊩Σ ⟨H; X; L⟩; s
+[RT-Conf-S]
+
+Fig. 21. Runtime Configuration Typing in FlowCore
+
+D
+PROOFS
+
+This section contains a statement and proof of soundness of the inference type system of Section 3
+with respect to the declarative system of Section 5.1, followed by our type safety result for the
+declarative system and by extension the entire type system.
+
+D.1
+Type Inference Soundness
+The following lemma captures the intuition behind the “havoc” mechanism, as the erasure of the
+part of the widened environment that is affected by the reaching effect.
+
+Lemma D.1 (Havoc). If
+
+(i) widen(Γ) = Γ′ ▷ C
+
+(ii) C′ ⊇ C ∪ { ω ≤ Havoc (Γ′) }
+
+(iii) ρ ⊢ C′
+
+then
+
+∆′ = eraseρ(ω)
+G
+(∆)
+
+where ρ (Γ) = ∆; G and ρ (Γ′) = ∆′; G.
+
+Proof. Let ρ (ω) = ε. For every variable x ∈ ε, it also holds that x ≤ Havoc (Γ′) ∈ C′, since C′ is
+
+saturated. Let Γ′(x) = τ α. By Rule CP-Havoc on the binding for x, it holds that α ≤ τ ∈ C′. Due
+
+to (iii), ρ (α) ≤ ρ (τ). Which is also written as G(x) ≤ ∆(x). But by definition of G it holds that
+
+∆(x) ≤ G(x), so it must be that ∆(x) = G(x). Generalizing for all variables in ρ (ω) we prove the
+
+wanted.
+□
+
+Lemma D.2 (Type Inference Soundness). If
+
+(i) Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C
+
+(ii) ρ ⊢ C
+
+then
+
+ρ (Γ) ⊩ e : ρ (τ) ; ρ (ε) ; ψ
+
+⊩
+
+ρ (Γ′)1
+
+"
+`;
+
+exports[`getPageText with large file Page [39 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+39
+
+Proof. By induction on the derivation of (i):
+
+• CG-Call:
+
+Γ ⊢ e1(e2): α; ε; ∅ ⊣ Γ3 ▷ C
+(D.2.1)
+
+By inverting Rule CG-Call on (D.2.1):
+
+Γ ⊢ e1 : τ1; ε1; ψ1 ⊣ Γ1 ▷ C1
+(D.2.2)
+
+Γ1 ⊢ e2 : τ2; ε2; ψ2 ⊣ Γ2 ▷ C2
+(D.2.3)
+
+widen(Γ2) = Γ3 ▷ Cw
+(D.2.4)
+
+ε1 ⊔ ε2 ⊔ ω = ε
+(D.2.5)
+
+C1 ∪ C2 ∪ Cw ∪
+�
+ω ≤ Havoc (Γ3) , τ1 ≤ Call(τ2
+ω−→ α)
+�
+= C
+(D.2.6)
+
+where α,ω fresh.
+
+Since by (D.2.6) it is C ⊇ C1 and C ⊇ C2, using (ii) it holds that:
+
+ρ ⊢ C1
+(D.2.7)
+
+ρ ⊢ C2
+(D.2.8)
+
+By induction hypothesis using (D.2.2), (D.2.7), (D.2.3) and (D.2.8):
+
+ρ (Γ) ⊩ e1 : ρ (τ1) ; ρ (ε1) ; ψ1
+
+⊩
+
+ρ (Γ1)1
+(D.2.9)
+
+ρ (Γ1) ⊩ e2 : ρ (τ2) ; ρ (ε2) ; ψ2
+
+⊩
+
+ρ (Γ2)1
+(D.2.10)
+
+By (D.2.6), using Definition A.2:
+
+ρ (τ1) ≤ ρ
+�
+τ2
+ω−→ α
+�
+≡ ρ (τ2)
+ρ(ω)
+−−−→ ρ (α)
+(D.2.11)
+
+By Lemma D.1 on (D.2.4), (D.2.6) and (ii):
+
+∆3 = eraseρ(ω)
+G
+(∆2)
+(D.2.12)
+
+where ρ (Γ2) = ∆2; G and ρ (Γ3) = ∆3; G.
+
+By Rule T-Call on (D.2.9), (D.2.10), (D.2.11) and (D.2.12)
+
+ρ (Γ) ⊩ e1(e2): ρ (α) ; ρ (ε1) ⊔ ρ (ε2) ⊔ ρ (ω) ; ∅
+
+⊩
+
+ρ (Γ3)1
+(D.2.13)
+
+∴
+ρ (Γ) ⊩ e1(e2): ρ (α) ; ρ (ε1 ⊔ ε2 ⊔ ω) ; ∅
+
+⊩
+
+ρ (Γ3)1
+(D.2.14)
+
+• CG-Assign:
+
+Γ ⊢ x =e : τ; ε ⊔ x; ψ\\x ⊣ Γ′[x �→ τ α ] ▷ C
+(D.2.15)
+
+By inverting Rule CG-Assign on (D.2.15):
+
+Γ ⊢ e : τ; ε; ψ ⊣ Γ′ ▷ C0
+(D.2.16)
+
+Γ′(x) = τ0α
+(D.2.17)
+
+C = C0 ∪ {τ ≤ α }
+(D.2.18)
+
+"
+`;
+
+exports[`getPageText with large file Page [40 / 58] - should get the page text 1`] = `
+"40
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Since by (D.2.18) it is C ⊇ C0, using (ii) it holds that:
+
+ρ ⊢ C0
+(D.2.19)
+
+By induction hypothesis using (D.2.16) and (D.2.19):
+
+ρ (Γ) ⊩ e : ρ (τ) ; ρ (ε) ; ψ
+
+⊩
+
+ρ (Γ′)1
+(D.2.20)
+
+By applying Rule T-Assign on (D.2.20):
+
+ρ (Γ) ⊩ x =e : ρ (τ) ; ρ (ε) ⊔ x; ψ\\x
+
+⊩
+
+ρ (Γ′) [x �→ ρ (τ) ]
+(D.2.21)
+
+∴
+ρ (Γ) ⊩ x =e : ρ (τ) ; ρ (ε ⊔ x) ; ψ\\x
+
+⊩
+
+ρ (Γ′[x �→ τ α ])1
+(D.2.22)
+
+The rest of the cases are handled similarly.
+
+□
+
+D.2
+Type Safety
+
+In this section we present the proofs of our safety result that connects the declarative type system
+of Section 5.1 with the runtime semantics of Section 4. First we set up a number of auxiliary lemmas
+and then proceed with a Preservation Theorem (D.9) and a Progress Theorem (D.10) that are later
+combined to produce a Type Safety Theorem (D.12).
+
+Lemma D.3 (Erased Environment Subtyping). If eraseε
+G (∆) = ∆′, then ∆ ≤ ∆′.
+
+Proof. By definition of the erase operator.
+□
+
+In the remaining we use the metavariable M to denote a term that is either an expression e or a
+function body {s; return e}.
+
+Lemma D.4 (Heap Typing Weakening). Let Σ′ ≤ Σ. Then:
+
+I. If ∆; G ⊩Σ M : τ; ε; ψ
+
+⊩
+
+∆1, then
+
+(a) ∆; G ⊩Σ′ M : τ ′; ε′; ψ ′
+
+⊩
+
+∆′
+1
+
+(b) τ ′ ≤ τ and ε′ ≤ ε
+
+II. If τ ′
+1 ≤ τ1 and G ⊩Σ X: τ ⟨τ1⟩, then
+
+(a) G ⊩Σ′ X: τ ′⟨τ ′
+1⟩
+
+(b) τ ′ ≤ τ
+
+III. If G ⊩Σ H, then G ⊩Σ′ H.
+
+Proof. By induction on the given derivation.
+□
+
+Lemma D.5 (Environment Strengthening). For the following, let environments ∆ and ∆′ be
+
+defined over common domains. and ∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆1.
+
+I. If ∆′ ≤ ∆, then
+
+(a) ∆′; G ⊩ e : τ ′; ε′; ψ ′
+
+⊩
+
+∆′
+1
+
+"
+`;
+
+exports[`getPageText with large file Page [41 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+41
+
+(b) τ ′ ≤ τ and ε′ ≤ ε
+
+(c) ∆′
+1 ≤ ∆1, ∆′
+1 :: ψ ′ ≤ ∆1 :: ψ and ∆′
+1 :: ¬ψ ′ ≤ ∆1 :: ¬ψ
+
+II. ∆ :: ψ\\ε; G ⊩ e : τ ′; ε′; ψ ′
+
+⊩
+
+∆1 :: ψ\\ε
+
+Proof. By induction on the given derivation.
+□
+
+Lemma D.6 (NonEffect). If
+
+∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′
+
+then
+
+∆′��ε ≤ ∆
+��ε
+where ε is the set of program variables that do not belong to the concrete effect ε.
+
+Proof. By induction on the given derivation:
+
+• T-Var, T-Const, T-Fun and T-Pred: It holds that
+
+∆′ ≡ ∆
+(D.6.1)
+
+so the wanted result holds trivially.
+
+• T-Assign:
+
+∆; G ⊩ x =e0
+����
+
+e
+
+: τ; ε0 ⊔ x; ψ0\\x
+
+⊩
+
+∆0[x0 �→ τ ]
+����������������������
+
+∆′
+
+(D.6.2)
+
+By inverting T-Assign on (D.6.2):
+
+∆; G ⊩ e0 : τ; ε0; ψ0
+
+⊩
+
+∆0
+(D.6.3)
+
+By (D.6.2) for a variable y s.t. y � ε, it also holds that:
+
+y � x
+(D.6.4)
+
+y � ε0
+(D.6.5)
+
+By induction hypothesis using (D.6.3) and (D.6.5):
+
+∆0(y) ≤ ∆(y)
+(D.6.6)
+
+By (D.6.4) it holds that ∆0(y) = ∆′(y), and so by (D.6.6):
+
+∆′(y) ≤ ∆(y)
+(D.6.7)
+
+• T-Call:
+
+∆; G ⊩ e1(e2): τ; ε1 ⊔ ε2 ⊔ εc
+������������������
+
+ε
+
+; ∅
+
+⊩
+
+∆′
+(D.6.8)
+
+"
+`;
+
+exports[`getPageText with large file Page [42 / 58] - should get the page text 1`] = `
+"42
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+By inverting T-Call on (D.6.8)
+
+∆; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆1
+(D.6.9)
+
+∆1; G ⊩ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+(D.6.10)
+
+τ1 ≤ τ2
+εc
+−→ τ
+(D.6.11)
+
+∆′ = eraseεc
+G (∆2)
+(D.6.12)
+
+For a variable x ∈ dom(∆′) s.t. x � ε, it also holds that:
+
+x � ε1
+(D.6.13)
+
+x � ε2
+(D.6.14)
+
+x � εc
+(D.6.15)
+
+By induction hypothesis on (D.6.9) and (D.6.13), and (D.6.10) and (D.6.14):
+
+∆1(x) ≤ ∆(x)
+(D.6.16)
+
+∆2(x) ≤ ∆1(x)
+(D.6.17)
+
+By definition of the erase operator on (D.6.12) for x s.t. (D.6.15):
+
+∆′(x) = ∆2(x)
+(D.6.18)
+
+By (D.6.16), (D.6.17) and (D.6.18):
+
+∆′(x) ≤ ∆(x)
+(D.6.19)
+
+• T-And, T-Or, T-Not, T-Pred, T-Rec, T-FldRd and T-FldWr: Similar to above.
+
+□
+
+Assumption 1 (Dead Code Checking).
+
+I. ∆; G ⊩ if (true) {s1} else {s2}: ε
+
+⊩
+
+∆′ iff ∆; G ⊩ s1 : ε
+
+⊩
+
+∆′.
+
+II. ∆; G ⊩ if (false) {s1} else {s2}: ε
+
+⊩
+
+∆′ iff ∆; G ⊩ s2 : ε
+
+⊩
+
+∆′.
+
+III. ∆; G ⊩ true &&e : τ; ε; ψ
+
+⊩
+
+∆′ iff ∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′.
+
+IV. ∆; G ⊩ false &&e : τ; ε; ψ
+
+⊩
+
+∆′ iff ∆; G ⊩ false: τ; ε; ψ
+
+⊩
+
+∆′.
+
+V. ∆; G ⊩ false ||e : τ; ε; ψ
+
+⊩
+
+∆′ iff ∆; G ⊩ e : τ; ε; ψ
+
+⊩
+
+∆′.
+
+VI. ∆; G ⊩ true ||e : τ; ε; ψ
+
+⊩
+
+∆′ iff ∆; G ⊩ true: τ; ε; ψ
+
+⊩
+
+∆′.
+
+Lemma D.7 (Preservation of Typing by Expression Reduction). Typing is preserved over the
+
+reduction of an expression that preserves the state of the stack. That is, for an initial runtime state
+
+S � ⟨H, X, L⟩, a target state S′ � ⟨H′, X, L′⟩ if, under a heap typing Σ:
+
+(i) G ⊩Σ H
+
+(ii) ∆; G ⊩Σ e : τ; ε; ψ
+
+⊩
+
+∆1
+
+"
+`;
+
+exports[`getPageText with large file Page [43 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+43
+
+(iii) S; e −→ S′; e′
+
+where ∆ � Σ ◦ L, then there exist Σ′ s.t.:
+
+(a) G ⊩Σ′ H′
+
+(b) ∆′; G ⊩Σ′ e′: τ ′; ε′; ψ ′
+
+⊩
+
+∆′
+1
+
+(c) τ ′ ≤ τ
+
+(d) ε′ ≤ ε
+
+(e) • isValue(e′) ∧ truthy(e′) =⇒ ∆′
+1 :: ψ ′ ≤ ∆1 :: ψ
+
+• isValue(e′) ∧ falsy(e′) =⇒ ∆′
+1 :: ¬ψ ′ ≤ ∆1 :: ¬ψ
+
+• ¬isValue(e′) =⇒ ∆′
+1 :: ψ ′ ≤ ∆1 :: ψ ∧ ∆′
+1 :: ¬ψ ′ ≤ ∆1 :: ¬ψ
+
+where ∆′ � Σ′ ◦ L′.
+
+Proof. By induction on the derivation of (ii):
+
+• RT-Pred-Var:
+
+⟨H, X, L⟩; p(x)
+����
+
+e
+
+−→ ⟨H, X, L⟩; v
+(D.7.1)
+
+By Rule T-Pred, (ii) is of the form:
+
+∆; G ⊩Σ p(x): bool; ⊥; x �→ p
+������
+
+ψ
+
+⊩
+
+∆
+(D.7.2)
+
+Let ℓ � L(x).
+
+We examine the case where truthy(v) and pick:
+
+Σ′ � Σ[ ℓ �→ Σ(ℓ) :: p ]
+(D.7.3)
+
+The case for falsy(v) is similar, replacing p with ¬p.
+
+By definition (D.7.3) it holds that:
+
+Σ′ ≤ Σ
+(D.7.4)
+
+Store and heap do not evolve, i.e. L′ = L and H′ = H.
+
+So, by Lemma D.4.III on (i) and (D.7.4):
+
+G ⊩Σ′ H′
+(D.7.5)
+
+which proves (a).
+
+By definition of ∆′, it holds that:
+
+∆′ = ∆[x �→ ∆(x) :: p ]
+(D.7.6)
+
+"
+`;
+
+exports[`getPageText with large file Page [44 / 58] - should get the page text 1`] = `
+"44
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+By applying Rule T-Const on v (true or false)
+
+∆′; G ⊩Σ′ v : bool; ⊥;
+∅
+����
+
+ψ ′
+
+⊩
+
+∆′
+����
+
+∆′
+1
+
+(D.7.7)
+
+which proves (b), (c) and (d).
+
+For (e) we have:
+
+∆′
+1 :: ψ ′
+(D.7.7)
+=
+∆′ :: ∅
+(D.7.6)
+=
+∆[x �→ ∆(x) :: p ]
+
+≡
+∆ :: (x �→ p)
+(D.7.2)
+=
+∆ :: ψ
+(D.7.2)
+=
+∆1 :: ψ
+
+This proves the first case of (e). The rest are trivially true.
+
+• RT-Asgn with v = n:
+
+⟨H, X, L⟩; x =n
+����
+
+e
+
+−→ ⟨H′, X, L⟩; n
+(D.7.8)
+
+By inverting Rule RT-Asgn on (D.7.8):
+
+H′ = H[ L(x) �→ n ]
+(D.7.9)
+
+By Rule T-Assign, (ii) is of the form:
+
+∆; G ⊩Σ x =n: bn; ε ⊔ x; ψ\\x
+
+⊩
+
+∆[x �→ bn ]
+��������������������
+
+∆1
+
+(D.7.10)
+
+By inverting Rule T-Assign on (D.7.10):
+
+∆; G ⊩Σ n: bn; ⊥; ∅
+
+⊩
+
+∆
+(D.7.11)
+
+So, ε = ⊥ and ψ = ∅.
+
+Let ℓ � L(x).
+
+We pick Σ′ � Σ[ ℓ �→ bn ]. By T-Const on n under ∆′:
+
+∆′; G ⊩Σ′ n: bn; ⊥;
+∅
+����
+
+ψ ′
+
+⊩
+
+∆′
+����
+
+∆′
+1
+
+(D.7.12)
+
+Let Σ0 and H0 s.t. Σ = Σ0, ℓ: τℓ and H = H0, ℓ �→ n.
+
+It holds that:
+
+Σ′ = Σ0, ℓ: bn
+(D.7.13)
+
+By applying Rule RT-Heap-Const on (i) (on the part of H0) and (D.7.13):
+
+G ⊩Σ′ H0, ℓ �→ n
+(D.7.14)
+
+which proves (a).
+
+By (D.7.11) we prove (b), (c) and (d).
+
+"
+`;
+
+exports[`getPageText with large file Page [45 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+45
+
+Since ∆′ and ∆ agree on all variables with the exception potentially of x, we limit the scope
+
+to x. By definition of ∆′ it holds that:
+
+(∆′
+1 :: ψ ′)(x)
+(D.7.11)
+=
+∆′(x)
+
+=
+(Σ′ ◦ L)(x)
+
+=
+Σ′(L(x))
+
+=
+Σ′(ℓ)
+(D.7.13)
+=
+bn
+(D.7.10)
+=
+∆1(x)
+
+=
+(∆1 :: ψ\\x)(x)
+
+The last line above holds since x is excluded from the set of variables that are refined by
+
+predmap. This proves the first case of (e). The second case for ¬ψ can be proven similarly.
+
+The third case is trivially true.
+
+• RT-Ectx:
+
+⟨H, X, L⟩; E⟨e0⟩
+����
+
+e
+
+−→ ⟨H′, X, L′⟩; E⟨e′
+0⟩
+(D.7.15)
+
+By inverting Rule RT-Ectx on (D.7.15):
+
+⟨H, X, L⟩; e0 −→ ⟨H′, X, L′⟩; e′
+0
+(D.7.16)
+
+By induction hypothesis using (i), (D.7.26) and (D.7.16) there exists Σ′ s.t.:
+
+G ⊩Σ′ H′
+(D.7.17)
+
+∆′; G ⊩Σ′ e′
+0 : τ ′
+0; ε′
+0; ψ ′
+0
+
+⊩
+
+∆′
+0
+(D.7.18)
+
+τ ′
+0 ≤ τ0
+(D.7.19)
+
+ε′
+0 ≤ ε0
+(D.7.20)
+
+isValue(e′
+0) ∧ truthy(e′
+0) =⇒ ∆′
+0 :: ψ ′
+0 ≤ ∆0 :: ψ0
+(D.7.21)
+
+isValue(e′
+0) ∧ falsy(e′
+0) =⇒ ∆′
+0 :: ¬ψ ′
+0 ≤ ∆0 :: ¬ψ0
+(D.7.22)
+
+¬isValue(e′
+0) =⇒ ∆′
+0 :: ψ ′
+0 ≤ ∆0 :: ψ0 ∧ ∆′
+0 :: ¬ψ ′
+0 ≤ ∆0 :: ¬ψ0
+(D.7.23)
+
+By (D.7.17) we prove (a).
+
+We examine cases on the form of E and the value of e0:
+
+– E ≡ ⟨ ⟩ &&e1 and isValue(e′
+0). Let’s also assume that truthy(e′
+0). (The case for falsy(e′
+0) is
+
+symmetrical.)
+
+It holds that:
+
+e ≡ e0 &&e1
+(D.7.24)
+
+e′ ≡ e′
+0 &&e1
+(D.7.25)
+
+"
+`;
+
+exports[`getPageText with large file Page [46 / 58] - should get the page text 1`] = `
+"46
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+By inverting T-And on (ii) using (D.7.24):
+
+∆; G ⊩ e0 : τ0; ε0; ψ0
+
+⊩
+
+∆0
+(D.7.26)
+
+∆0 :: ψ0; G ⊩ e1 : τ1; ε1; ψ1
+
+⊩
+
+∆01
+(D.7.27)
+
+τ = τ0 :: falsy ⊔ τ1
+(D.7.28)
+
+ε = ε0 ⊔ ε1
+(D.7.29)
+
+ψ = (ψ0\\ε1) ∧ψ1
+(D.7.30)
+
+∆1 = (∆0 :: ¬ψ0) ⊔ ∆01
+(D.7.31)
+
+By Lemma D.5 on (D.7.21) and (D.7.27):
+
+∆′
+0 :: ψ ′
+0; G ⊩Σ′ e1 : τ ′
+1; ε′
+1; ψ ′
+1
+
+⊩
+
+∆′
+01
+(D.7.32)
+
+τ ′
+1 ≤ τ1
+(D.7.33)
+
+ε′
+1 ≤ ε1
+(D.7.34)
+
+∆′
+01 :: ψ ′
+1 ≤ ∆01 :: ψ1
+(D.7.35)
+
+∆′
+01 :: ¬ψ ′
+1 ≤ ∆01 :: ¬ψ1
+(D.7.36)
+
+By assumption 1.III using (D.7.32):
+
+∆′
+0 :: ψ ′
+0
+��������
+
+∆′
+
+; G ⊩Σ′ true &&e1 : τ ′
+1; ε′
+1;
+ψ ′
+1
+����
+
+ψ ′
+
+⊩
+
+∆′
+01
+����
+
+∆′
+1
+
+(D.7.37)
+
+By (D.7.37) we prove (b).
+
+By (D.7.33) and (D.7.28) we prove (c).
+
+By (D.7.34) and (D.7.29) we prove (d).
+
+By Lemma D.5.II on (D.7.27) refining with ψ0\\ε1:
+
+∆0 :: ψ0 :: ψ0\\ε1
+������������������������������
+
+≡∆0::ψ0
+
+; G ⊩ e1 : _; _; _
+
+⊩
+
+∆01 :: ψ0\\ε1
+(D.7.38)
+
+By Lemma D.5 on (D.7.21), (D.7.32) and (D.7.38):
+
+∆′
+01 ≤ ∆01 :: ψ0\\ε1
+(D.7.39)
+
+∴
+∆′
+01 :: ψ ′
+1 ≤ ∆01 :: ψ0\\ε1
+(D.7.40)
+
+By (D.7.35) and (D.7.40):
+
+∆′
+01 :: ψ ′
+1 ≤ ∆01 :: ψ0\\ε1 ∧ψ1
+(D.7.37)
+∴
+∆′
+1 :: ψ ′ ≤ ∆01 :: ψ0\\ε1 ∧ψ1
+(D.7.30)
+∴
+∆′
+1 :: ψ ′ ≤ ∆01 :: ψ
+
+(D.7.31)
+∴
+∆′
+1 :: ψ ′ ≤ ∆1 :: ψ
+
+"
+`;
+
+exports[`getPageText with large file Page [47 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+47
+
+which proves the first part of (e). The case for ¬ψ is similar.
+
+– The remaining cases are treated similarly.
+
+• RT-And-Tru:
+
+⟨H, X, L⟩; v1 &&e2
+��������
+
+e
+
+−→ ⟨H, X, L⟩; e2
+(D.7.41)
+
+By inverting Rule RT-And-Tru on (D.7.41):
+
+truthy(v1)
+(D.7.42)
+
+Due to (D.7.41) judgment (ii) is of the form:
+
+∆; G ⊩Σ v1 &&e2 : τ1 :: falsy ⊔ τ2
+��������������������������
+
+τ
+
+; ε1 ⊔ ε2
+������
+
+ε
+
+; (ψ1\\ε1) ∧ψ2
+��������������������
+
+ψ
+
+⊩
+
+∆01 :: ¬ψ1 ⊔ ∆2
+������������������������������
+
+∆1
+
+(D.7.43)
+
+By inverting Rule T-And on (ii) and simplifying by using Rules Rt-T-Loc and T-Const:
+
+∆; G ⊩Σ v1 : τ1;
+⊥
+����
+
+ε1
+
+;
+∅
+����
+
+ψ1
+
+⊩
+
+∆
+����
+
+∆01
+
+(D.7.44)
+
+∆; G ⊩Σ e2 : τ2; ε2; ψ2
+
+⊩
+
+∆2
+(D.7.45)
+
+Store and heap do not evolve, i.e. L′ = L and H′ = H.
+
+We pick Σ′ � Σ and so by (D.7.45):
+
+∆′ = ∆
+(D.7.46)
+
+∆′
+1 = ∆2
+(D.7.47)
+
+ψ ′ = ψ2
+(D.7.48)
+
+By (i):
+
+G ⊩Σ′ H′
+(D.7.49)
+
+which proves (a).
+
+By (D.7.45) we prove (b).
+
+It holds that τ2 ≤ (τ1 :: falsy ⊔ τ2)
+(D.7.43)
+≡
+τ, which proves (c).
+
+It holds that ε2 ≤ ε1 ⊔ ε2
+(D.7.43)
+≡
+ε, which proves (d).
+
+By (D.7.43) and (D.7.44):
+
+ψ = ψ2
+(D.7.50)
+
+"
+`;
+
+exports[`getPageText with large file Page [48 / 58] - should get the page text 1`] = `
+"48
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+Finally, it holds that
+
+∆′
+1 :: ψ ′
+(D.7.47)
+=
+∆2 :: ψ ′
+
+(D.7.48)
+=
+∆2 :: ψ2
+
+≤
+(∆01 :: ¬ψ1 ⊔ ∆2) :: ψ2
+(D.7.43)
+=
+∆1 :: ψ2
+(D.7.50)
+=
+∆1 :: ψ
+
+which proves the first case of (e). The second case is proven similarly.
+
+The rest of the cases are handled similarly.
+□
+
+Lemma D.8 (Preservation of Typing by Statement Reduction). Typing is preserved over the
+
+reduction of a statement that preserves the state of the stack. That is, for an initial runtime state
+
+S � ⟨H, X, L⟩, a target state S′ � ⟨H′, X, L′⟩ if, under a heap typing Σ:
+
+(i) G ⊩Σ H
+
+(ii) ∆; G ⊩Σ s : ε
+
+⊩
+
+∆1
+
+(iii) S; s −→ S′; s′
+
+where ∆ � Σ ◦ L, then there exist Σ′ s.t.:
+
+(a) G ⊩Σ′ H′
+
+(b) ∆′; G ⊩Σ′ s′: ε′
+
+⊩
+
+∆′
+1
+
+(c) ε′ ≤ ε
+
+(d) ∆′
+1 ≤ ∆1
+
+where ∆′ � Σ′ ◦ L′.
+
+Proof. Similar to proof of Lemma D.7.
+
+□
+
+Theorem D.9 (Subject Reduction). Typing is preserved over expression reduction. Formally, if
+
+(i) G ⊩Σ S; e : τ
+
+(ii) S; e −→ S′; M′
+
+then there exists Σ′ s.t.
+
+(a) G ⊩Σ′ S′; M′: τ ′
+
+(b) τ ′ ≤ τ
+
+Proof. Let
+
+S ≡ ⟨H; X; L⟩
+(D.9.1)
+
+S′ ≡ ⟨H′; X′; L′⟩
+(D.9.2)
+
+"
+`;
+
+exports[`getPageText with large file Page [49 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+49
+
+By inverting Rule RT-Conf-B on (i):
+
+G ⊩Σ H
+(D.9.3)
+
+∆ = Σ ◦ L
+(D.9.4)
+
+∆; G ⊩Σ e : τe; εe
+
+⊩
+
+∆e
+(D.9.5)
+
+ΣX = ∆e ◦ L−1 ⊕ Σ
+(D.9.6)
+
+G ⊩ΣX X: τ ⟨τe⟩
+(D.9.7)
+
+By induction on the derivation of (ii):
+
+• RT-Asgn, RT-Arr, RT-Pred-Var, RT-And-Tru, RT-And-Fls, RT-Or-Tru, RT-Or-Fls, RT-Neg,
+
+RT-Var, RT-If-Tru , RT-If-Fls , and RT-Skip do not evolve the stack, so can be proven by use
+
+of Lemma D.7.
+
+• RT-Call:
+
+⟨H; X; L⟩; E⟨ℓ(v)⟩
+����������
+
+e
+
+−→ ⟨H′; X′; L′⟩; {s0; return e0}
+��������������������������������
+
+M′
+
+(D.9.8)
+
+where ℓ′ fresh. By inverting Rule RT-Call on (D.9.8):
+
+H(ℓ) = ⟨L0, (x) ⇒ M′⟩
+(D.9.9)
+
+xi = locals(M′)
+(D.9.10)
+
+H′ = H, ℓ′ �→ v, ℓi �→ undefined
+(D.9.11)
+
+X′ = X, L.E
+(D.9.12)
+
+L′ = L0, x �→ ℓ′, xi �→ ℓi
+(D.9.13)
+
+Due to (D.9.8), judgment (D.9.5) is of the form:
+
+∆; G ⊩Σ E⟨ℓ(v)⟩ : τe; εe
+
+⊩
+
+∆e
+(D.9.14)
+
+By Lemma C.1 on (D.9.14) and given that the predicate mapping associated with a function
+
+call is empty:
+
+∆; G ⊩Σ ℓ(v): τc; εc; ψc
+
+⊩
+
+∆3
+(D.9.15)
+
+∆3; G ⊩Σ E: τe ⟨τc⟩; εe ⟨εc⟩; ψ ⟨ψc⟩
+
+⊩
+
+∆e
+(D.9.16)
+
+By inverting Rule T-Call on (D.9.15):
+
+∆; G ⊩Σ ℓ: τℓ; ⊥; ∅
+
+⊩
+
+∆1
+(D.9.17)
+
+∆1; G ⊩Σ v : τv; ⊥; ∅
+
+⊩
+
+∆2
+(D.9.18)
+
+τℓ ≤ τv
+εc
+−→ τc
+(D.9.19)
+
+∆3 = eraseεc
+G (∆2)
+(D.9.20)
+
+"
+`;
+
+exports[`getPageText with large file Page [50 / 58] - should get the page text 1`] = `
+"50
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+By Rules Rt-T-Loc and T-Const on (D.9.17) and on (D.9.18):
+
+∆ = ∆1 = ∆2
+(D.9.21)
+
+So (D.9.18) becomes:
+
+∆; G ⊩Σ v : τv; ⊥; ∅
+
+⊩
+
+∆
+(D.9.22)
+
+By inverting Rule RT-Heap-Fun on (D.9.3) using (D.9.9):
+
+G ⊩Σ H0
+(D.9.23)
+
+Σ(ℓ) = τℓ
+(D.9.24)
+
+∆0 = Σ ◦ L0
+(D.9.25)
+
+∆0; G ⊩ (x) ⇒ {s0; return e0}: τℓ; ⊥; ∅
+
+⊩
+
+∆′
+0
+(D.9.26)
+
+where
+
+H ≡ H0, ℓ �→ ⟨L0, (x) ⇒ M′⟩
+(D.9.27)
+
+By inverting Rule T-Fun on (D.9.26):
+
+eraseG(∆0), x : τx, xi : void
+��������������������������������������������������������������
+
+∆0.1
+
+; G ⊩Σ {s0; return e0}: τ0; ε0
+
+⊩
+
+∆0.2
+(D.9.28)
+
+τℓ ≡ τx
+ε0\\x,xi
+−−−−−→ τ0
+(D.9.29)
+
+where xi are the local variables defined in s0.
+
+By (D.9.19) and (D.9.29):
+
+τx
+ε0\\x,xi
+−−−−−→ τ0 ≤ τv
+εc
+−→ τc
+(D.9.30)
+
+By subtyping decomposition on (D.9.30):
+
+τv ≤ τx
+(D.9.31)
+
+τ0 ≤ τc
+(D.9.32)
+
+ε0\\x,xi ≤ εc
+(D.9.33)
+
+After the reduction step, we pick:
+
+Σ′ = Σ, ℓ′: τv, ℓi : void
+(D.9.34)
+
+The body M′ = {s0; return e0} is checked under the environment produced by store L0 and
+
+heap typing Σ′. Σ′ coincides with Σ on their common domain dom(L), so:
+
+∆0 = Σ′ ◦ L0 = Σ ◦ L0
+(D.9.35)
+
+"
+`;
+
+exports[`getPageText with large file Page [51 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+51
+
+We extend the store L0 with a binding from x to ℓ′, and from every variable declared in the
+
+body s0 to void, resulting in the following environment:
+
+∆′ = ∆0, x : τv, xi : void = Σ′ ◦ L0, x : ℓ′, xi : ℓi
+������������������������������
+
+L′
+
+(D.9.36)
+
+By Lemma D.4.I on (D.9.22):
+
+∆; G ⊩Σ′ v : τv; ⊥; ∅
+
+⊩
+
+∆
+(D.9.37)
+
+By applying Rules RT-Heap-Loc and RT-Heap-Const using (D.9.3), (D.9.34) and (D.9.37):
+
+G ⊩Σ′ H′
+(D.9.38)
+
+By definition of erase and (D.9.31):
+
+∆0, x : τv, xi : void
+����������������������������������������
+
+∆′
+
+≤ eraseG(∆0), x : τx, xi : void
+��������������������������������������������������������������
+
+∆0.1
+
+(D.9.39)
+
+By Lemma D.5.I on (D.9.28) and (D.9.39), and using the extended heap typing Σ′:
+
+∆′; G ⊩Σ′ {s0; return e0}: τ ′
+0; ε′
+0
+
+⊩
+
+∆′
+2
+(D.9.40)
+
+τ ′
+0 ≤ τ0
+(D.9.41)
+
+∆′
+2 ≤ ∆0.2
+(D.9.42)
+
+ε′
+0 ≤ ε0
+(D.9.43)
+
+Stack X′ = X, L.E is checked under a heap typing:
+
+Σ′
+X, L.E � ∆′
+2 ◦ L−1
+0 ⊕ Σ′
+(D.9.44)
+
+Evaluation context E is checked under an environment:
+
+∆′
+3 = Σ′
+X, L.E ◦ L
+(D.9.45)
+
+Let X and X0 be the domains of L and L0:
+
+X � dom(L)
+(D.9.46)
+
+X0 � dom(L0)
+(D.9.47)
+
+Since dom(∆3) = X, we can examine ∆3 in two parts based on whether an element x in X,
+
+also belongs to X0 or not:
+
+∆3 ≡ ∆3
+��
+X0∩X, ∆3
+��
+X \\ X0
+(D.9.48)
+
+We similarly examine ∆′
+3 into two parts: (i) the closure environment ∆′
+2 at the end of the
+
+function body, and (ii) the part of the environment at the call-site that is not part of the
+
+closure environment and so retains the typing from before the function call:
+
+∆′
+3 ≡ ∆′
+2
+��
+X0∩X, ∆
+��
+X \\ X0
+(D.9.49)
+
+We examine the two non-overlapping domains separately:
+
+"
+`;
+
+exports[`getPageText with large file Page [52 / 58] - should get the page text 1`] = `
+"52
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+– X0 ∩ X. By restricting (D.9.36) to X0 ∩ X:
+
+∆′��
+X0∩X = ∆0, x : τv, xi : void
+���
+X0∩X
+= Σ′ ◦
+�
+L0, x : ℓ′, xi : ℓi
+���
+X0∩X
+
+�
+(D.9.50)
+
+∴
+∆′��
+X0∩X = ∆0
+��
+X0∩X
+= Σ′ ◦ L0
+��
+X0∩X
+(D.9.51)
+
+Note that due to α-renaming every variable is uniquely defined. Therefore, each variable is
+
+bound to the same location in a store that contains it. In particular, for L0 and L it holds
+
+that:
+
+L0
+��
+X0∩X = L
+��
+X0∩X
+(D.9.52)
+
+By restricting (D.9.4) to X0 ∩ X:
+
+∆
+��
+X0∩X = Σ ◦ L
+��
+X0∩X
+(D.9.53)
+
+By combining (D.9.21), (D.9.51), (D.9.52) and (D.9.53):
+
+∆′��
+X0∩X = ∆2
+��
+X0∩X
+(D.9.54)
+
+Effect εc is concrete so it can be interpreted as a set of variables. We split the set X0 ∩ X in
+
+the following:
+
+X0 ∩ X = X0 ∩ X ∩ εc
+��������������������
+
+Xε
+
+, (X0 ∩ X) \\εc
+������������������������
+
+Xε
+
+(D.9.55)
+
+We examine each part separately.
+
+∗ Xε. We first restrict (D.9.20) to domain εc (a concrete effect interpreted as a set):
+
+∆3
+��
+εc = eraseεc
+G (∆2)
+��
+εc
+(D.9.56)
+
+By definition of erase, (D.9.56) can be written as:
+
+∆3
+��
+εc = G
+��
+εc
+(D.9.57)
+
+By definition of G it holds that:
+
+∆′
+2 ≤ G
+(D.9.58)
+
+By (D.9.57) and (D.9.58):
+
+∆′
+2
+��
+Xε ≤ ∆3
+��
+Xε
+(D.9.59)
+
+∗ Xε. By definition of erase:
+
+eraseεc
+G (∆2)
+��
+(X0∩X) \\ εc = ∆2
+��
+(X0∩X) \\ εc
+(D.9.60)
+
+since the binding for variables not in εc will not be affected by the erasure.
+
+By (D.9.20) and (D.9.60):
+
+∆2
+��
+(X0∩X) \\ εc = ∆3
+��
+(X0∩X) \\ εc
+(D.9.61)
+
+"
+`;
+
+exports[`getPageText with large file Page [53 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+53
+
+By (D.9.33) and (D.9.43) (interpreting concrete effects as sets):
+
+ε′
+0 ⊆ εc
+(D.9.62)
+
+By Lemma D.6 on (D.9.40):
+
+∆′
+2
+��
+(X0∩X) \\ ε′
+0 ≤ ∆′��
+(X0∩X) \\ ε′
+0
+(D.9.63)
+
+By (D.9.62) and (D.9.63):
+
+∆′
+2
+��
+(X0∩X) \\ εc ≤ ∆′��
+(X0∩X) \\ εc
+(D.9.64)
+
+By (D.9.64) and (D.9.54):
+
+∆′
+2
+��
+(X0∩X) \\ εc ≤ ∆2
+��
+(X0∩X) \\ εc
+(D.9.65)
+
+By definition of Xε, (D.9.65) can be written as
+
+∆′
+2
+��
+Xε ≤ ∆2
+��
+Xε
+(D.9.66)
+
+– X \\ X0. We follow a similar reasoning to above restricting the difference X \\ X0 to variables
+
+contained in εc or not. We examine the cases:
+
+∗ Restrict to εc. By (D.9.20):
+
+∆3
+��
+(X \\ X0)∩εc = eraseεc
+G (∆2)
+��
+(X \\ X0)∩εc
+(D.9.67)
+
+By definition of erase the above becomes:
+
+∆3
+��
+(X \\ X0)∩εc = ∆2
+��
+(X \\ X0)∩εc
+(D.9.68)
+
+∗ Restrict to εc. By (D.9.20):
+
+∆3
+��
+(X \\ X0) \\ εc = eraseεc
+G (∆2)
+��
+(X \\ X0) \\ εc
+(D.9.69)
+
+By definition of erase the above becomes:
+
+∆3
+��
+(X \\ X0) \\ εc = G
+��
+(X \\ X0) \\ εc
+(D.9.70)
+
+In either case it holds that:
+
+∆
+��
+X \\ X0 ≤ ∆3
+��
+X \\ X0
+(D.9.71)
+
+By (D.9.48) it holds that:
+�
+∆3
+��
+Xε , ∆3
+��
+Xε , ∆3
+��
+X \\ X0
+
+�
+≡ ∆3
+(D.9.72)
+
+By (D.9.59) and (D.9.72):
+�
+∆′
+2
+��
+Xε , ∆3
+��
+Xε , ∆3
+��
+X \\ X0
+
+�
+≤ ∆3
+(D.9.73)
+
+By Lemma D.3 on (D.9.73) and (D.9.19):
+�
+∆′
+2
+��
+Xε , ∆2
+��
+Xε , ∆3
+��
+X \\ X0
+
+�
+≤ ∆3
+(D.9.74)
+
+"
+`;
+
+exports[`getPageText with large file Page [54 / 58] - should get the page text 1`] = `
+"54
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+By (D.9.74) and (D.9.66):
+�
+∆′
+2
+��
+Xε , ∆′
+2
+��
+Xε , ∆3
+��
+X \\ X0
+
+�
+≤ ∆3
+(D.9.75)
+
+By (D.9.71) and (D.9.75):
+�
+∆′
+2
+��
+Xε , ∆′
+2
+��
+Xε , ∆
+��
+X \\ X0
+
+�
+
+����������������������������������������������������������
+
+∆′
+3
+
+≤ ∆3
+(D.9.76)
+
+By Lemma D.5.I (extended for evaluation contexts) on (D.9.76) and (D.9.16):
+
+∆′
+3; G ⊩Σ′ E: τ ′
+e ⟨τc⟩; ε′
+e ⟨εc⟩; ψ ′⟨ψc⟩
+
+⊩
+
+∆′
+e
+(D.9.77)
+
+τ ′
+e ≤ τe
+(D.9.78)
+
+ε′
+e ≤ εe
+(D.9.79)
+
+∆′
+e ≤ ∆e
+(D.9.80)
+
+We check the remaining stack X under a heap typing (see also (D.9.44)):
+
+Σ′
+X � ∆′
+e ◦ L−1 ⊕ ∆′
+2 ◦ L−1
+0 ⊕ Σ′
+������������������������
+
+Σ′
+X, L.E
+
+(D.9.81)
+
+Let L and L0 the ranges of L and L0:
+
+L � rng (L)
+(D.9.82)
+
+L0 � rng (L0)
+(D.9.83)
+
+We examine Σ′
+X in the following subdomains that correspond to the three parts of the
+
+definition above:
+
+– L. By restricting (D.9.6) and (D.9.81), respectively, to L (the first part of the override will
+
+always be selected):
+
+ΣX
+��
+L = ∆e ◦ L−1
+(D.9.84)
+
+Σ′
+X
+��
+L = ∆′
+e ◦ L−1
+(D.9.85)
+
+By substituting (D.9.84) and (D.9.85) in (D.9.80):
+
+Σ′
+X
+��
+L ≤ ΣX
+��
+L
+(D.9.86)
+
+– L0 \\ L. By (D.9.6) and (D.9.25):
+
+ΣX
+��
+L0 \\ L
+(D.9.6)
+=
+Σ
+��
+L0 \\ L
+(D.9.25)
+=
+∆0 ◦ (L0 \\ L)−1
+(D.9.87)
+
+By restricting (D.9.81) to L0 \\ L (the second part of the override will always be selected):
+
+Σ′
+X
+��
+L0 \\ L = ∆′
+2 ◦ (L0 \\ L)−1
+(D.9.88)
+
+By (D.9.65), (D.9.87) and (D.9.88):
+
+Σ′
+X
+��
+L0 \\ L ≤ ΣX
+��
+L0 \\ L
+(D.9.89)
+
+"
+`;
+
+exports[`getPageText with large file Page [55 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+55
+
+– (L0 ∪ L)∁. By (D.9.6) and (D.9.44):
+
+ΣX
+��
+(L0∪L)∁ = Σ
+��
+(L0∪L)∁
+(D.9.90)
+
+ΣX
+��
+(L0∪L)∁ = Σ′��
+(L0∪L)∁
+(D.9.91)
+
+By (D.9.90), (D.9.91) and (D.9.34):
+
+Σ′
+X
+��
+(L0∪L)∁ ≤ ΣX
+��
+(L0∪L)∁
+(D.9.92)
+
+By composing (D.9.86), (D.9.89) and (D.9.92):
+
+Σ′
+X ≤ ΣX
+(D.9.93)
+
+By Lemma D.4 on (D.9.93), (D.9.78) and (D.9.7):
+
+G ⊩Σ′
+X X: τ ′⟨τ ′
+e⟩
+(D.9.94)
+
+τ ′ ≤ τ
+(D.9.95)
+
+By Rule RT-Stack-C on (D.9.45), (D.9.77), (D.9.81) and (D.9.94) we get the typing for X′ =
+
+X, L.E:
+
+G ⊩Σ′
+X, L.E X, L.E: τ ′⟨τc⟩
+(D.9.96)
+
+By applying Rule RT-Conf-B on (D.9.38), (D.9.36), (D.9.40) and (D.9.96):
+
+G ⊩Σ′ ⟨H′; X′; L′⟩; {s0; return e0}: τ ′
+(D.9.97)
+
+which proves (a).
+
+By (D.9.95) we prove (b).
+
+• RT-Ret
+
+This case is treated similarly.
+
+□
+
+Theorem D.10 (Progress – Expressions and Function Bodies). If
+
+G ⊩Σ S; M : τ
+
+then one of the following holds:
+
+(a) M is a value
+
+(b) there exist S′ and M′ s.t. S; M −→ S′; M′.
+
+Proof. Let
+
+S ≡ ⟨H; X; L⟩
+(D.10.1)
+
+We prove the desired by induction on the given derivation.
+
+"
+`;
+
+exports[`getPageText with large file Page [56 / 58] - should get the page text 1`] = `
+"56
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+• RT-Conf-B:
+
+G ⊩Σ S; e : τ
+(D.10.2)
+
+By inverting Rule RT-Conf-E on (D.10.2):
+
+G ⊩Σ H
+(D.10.3)
+
+∆ = Σ ◦ L
+(D.10.4)
+
+∆; G ⊩Σ e : τe; ε; ψ
+
+⊩
+
+∆′
+(D.10.5)
+
+Σ′ = ∆′ ◦ L−1 ⊕ Σ
+(D.10.6)
+
+G ⊩Σ′ X: τ ⟨αX⟩
+(D.10.7)
+
+By induction on the derivation of (D.10.5):
+
+– T-Const: This expression is already a value so (a) holds.
+
+– T-Call:
+
+∆; G ⊩Σ ℓ(v)
+����
+
+e
+
+: τe; ε; ψ
+
+⊩
+
+∆′
+(D.10.8)
+
+By inverting Rule T-Call on (D.10.8):
+
+∆; G ⊩Σ ℓ: τℓ; ⊥; ∅
+
+⊩
+
+∆1
+(D.10.9)
+
+∆1; G ⊩Σ v : τv; ⊥; ∅
+
+⊩
+
+∆2
+(D.10.10)
+
+τℓ ≤ τv
+ε−→ τe
+(D.10.11)
+
+∆′ = eraseε
+G (∆2)
+(D.10.12)
+
+By inverting Rule Rt-T-Loc on (D.10.9):
+
+∆1 = ∆
+(D.10.13)
+
+Σ(ℓ) = τℓ
+(D.10.14)
+
+By Rule T-Const (or Rule Rt-T-Loc) on (D.10.10):
+
+∆2 = ∆
+(D.10.15)
+
+By (D.10.3) for location ℓ:
+
+G ⊩Σ H0, ℓ �→ �v
+(D.10.16)
+
+For some heap H0 and heap value �v.
+
+Next we prove that H(ℓ) = ⟨L0, (x) ⇒ {s0; return e0}⟩ for some L0, s0 and e0 by induction
+
+on the derivation of (D.10.16):
+
+∗ RT-Heap-Loc:
+
+G ⊩Σ H0, ℓ �→ ℓ′
+(D.10.17)
+
+"
+`;
+
+exports[`getPageText with large file Page [57 / 58] - should get the page text 1`] = `
+"Fast and Precise Type Checking for JavaScript
+57
+
+For some location ℓ′ distinct from ℓ.
+
+By inverting RT-Heap-Loc on (D.10.17):
+
+G ⊩Σ H0
+(D.10.18)
+
+Let H0 = H′
+0, ℓ′ �→ �v′. (D.10.18) becomes:
+
+G ⊩Σ H′
+0, ℓ′ �→ �v′
+(D.10.19)
+
+By induction hypothesis using (D.10.19):
+
+H0(ℓ′) = ⟨L′
+0, (x) ⇒ {s′
+0; return e′
+0}⟩
+(D.10.20)
+
+∗ RT-Heap-Const:
+
+G ⊩Σ H0, ℓ �→ n
+(D.10.21)
+
+For some constant n. By inverting RT-Heap-Const on (D.10.21):
+
+G ⊩Σ H0
+(D.10.22)
+
+Σ(ℓ) = bn
+(D.10.23)
+
+The subtyping constraint (D.10.11) and (D.10.23) lead to a contradiction.
+
+∗ RT-Heap-Fun:
+
+G ⊩Σ H0, ℓ �→ ⟨L0, (x) ⇒ {s0; return e0}⟩
+(D.10.24)
+
+which proves the desired result immediately.
+
+∗ RT-Heap-Rec: Similar to rule RT-Heap-Const.
+
+So there exist L0, s0 and e0 s.t.:
+
+H(ℓ) = ⟨L0, (x) ⇒ {s0; return e0}⟩
+(D.10.25)
+
+We pick:
+
+H′ = H, ℓv �→ v, ℓi �→ undefined
+(D.10.26)
+
+X′ = X, L.⟨ ⟩
+(D.10.27)
+
+L′ = L0, x �→ ℓv, xi �→ ℓi
+(D.10.28)
+
+where xi are the variables defined in the function body, and ℓv and ℓi are fresh locations.
+
+By applying Rule RT-Call using (D.10.25), (D.10.26), (D.10.27) and (D.10.28)
+
+S; ℓ(v) −→ ⟨H′; X′; L′⟩; {s0; return e0}
+(D.10.29)
+
+which proves (b).
+
+– T-Var, T-Assign, T-Fun, T-And, T-Or, T-Not and T-Pred are straight-forward since they
+
+only impose very minimal preconditions for the respective transition to happen.
+
+• RT-Conf-S Proved by applying Theorem D.11 on the statement part of the body.
+
+"
+`;
+
+exports[`getPageText with large file Page [58 / 58] - should get the page text 1`] = `
+"58
+Avik Chaudhuri, Panagiotis Vekris, Sam Goldman, Marshall Roch, and Gabriel Levi
+
+□
+
+Theorem D.11 (Progress – Statements). If
+
+(i) ⊢Σ S; s ▷ C
+
+(ii) C is consistent
+
+then one of the following holds:
+
+(a) s is a irreducible form
+
+(b) there exists S′ and s′ s.t. S; s −→ S′; s′
+
+Proof. The proof is by induction on the derivation of (i).
+
+□
+
+Theorem D.12 (Type Safety). A well-typed program is either in normal form or reduces to another
+
+well typed state.
+
+Proof. The proof follows by subsequent applications of Theorems D.10, D.11 and D.9.
+□
+
+"
+`;

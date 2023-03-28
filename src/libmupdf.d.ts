@@ -2,8 +2,10 @@ import "emscripten";
 
 export namespace MuPdf {
   export interface DocumentHandle {}
+
   type pageNumber = number;
   type resolution = number;
+
   export interface Box {
     x: number;
     y: number;
@@ -46,7 +48,12 @@ export namespace MuPdf {
 
     getPageText(doc: DocumentHandle, page: pageNumber): string;
 
-    searchPageText(doc: DocumentHandle, page: pageNumber, searchString: string, maxHits: number): Box[];
+    searchPageText(
+      doc: DocumentHandle,
+      page: pageNumber,
+      searchString: string,
+      maxHits: number
+    ): Box[];
   }
 }
 
