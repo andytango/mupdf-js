@@ -9,8 +9,8 @@ import { Stream } from "stream";
 const MUPDF_VERSION = "1.17.0";
 
 async function main() {
-  // await clearTmpDirectory();
-  // await downloadMuPdf();
+  //await clearTmpDirectory();
+  //await downloadMuPdf();
   await runDockerBuildCommand();
 }
 

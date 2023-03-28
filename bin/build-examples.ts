@@ -24,6 +24,16 @@ async function main() {
     getPageText(i, mupdf, doc);
   }
   console.groupEnd();
+
+  console.group("Stress test...");
+  let iterations = 100000;
+  while (iterations--) {
+    for (let i = 1; i <= n; i++) {
+      mupdf.searchPageText(doc, i, "a", 1000);
+      getPageText(i, mupdf, doc);
+    }
+  }
+  console.groupEnd();
 }
 
 function writePageToPngFile(i: number, { drawPageAsPNG }: any, doc: any) {

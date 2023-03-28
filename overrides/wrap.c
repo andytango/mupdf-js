@@ -1,5 +1,6 @@
 #include "emscripten.h"
 #include "mupdf/fitz.h"
+#include <string.h>
 
 static fz_context *ctx;
 
@@ -254,11 +255,24 @@ char *getPageText(fz_document *doc, int number)
     fz_page *page;
     fz_stext_page *stext;
 
+    static char *bufStr = NULL;
+    free(bufStr);
+    bufStr = NULL;
+
+
     page = fz_load_page(ctx, doc, number - 1);
     stext = fz_new_stext_page_from_page(ctx, page, NULL);
     fz_buffer *buf = fz_new_buffer_from_stext_page(ctx, stext);
-    char *bufStr = malloc(buf->len + 1);
+
+    bufStr = malloc(buf->len + 1);
+    memset(bufStr, 0, buf->len + 1);
     sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
+
+    fz_drop_buffer(ctx, buf);
+    fz_drop_stext_page(ctx, stext);
+    fz_drop_page(ctx, page);
+
+
     return bufStr;
 }
 
@@ -268,6 +282,9 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
 {
     fz_buffer *buf;
     fz_quad hits[maxHits];
+    static char *bufStr = NULL;
+    free(bufStr);
+    bufStr = NULL;
 
     if (maxHits <= 0) {
         return NULL;
@@ -289,7 +306,11 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
         fz_append_string(ctx, buf, quadStr);
     }
 
-    char *bufStr = malloc(buf->len + 1);
+    bufStr = malloc(buf->len + 1);
+    memset(bufStr, 0, buf->len + 1);
     sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
+
+    fz_drop_buffer(ctx, buf);
+
     return bufStr;
 }
