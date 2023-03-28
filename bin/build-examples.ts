@@ -21,6 +21,7 @@ async function main() {
     writePageToPngFile(i, mupdf, doc);
     writePageToSvgFile(i, mupdf, doc);
     writePageToHtmlFile(i, mupdf, doc);
+    getPageText(i, mupdf, doc);
   }
   console.groupEnd();
 }
@@ -39,6 +40,12 @@ function writePageToSvgFile(i: number, { drawPageAsSVG }: any, doc: any) {
 function writePageToHtmlFile(i: number, { drawPageAsHTML }: any, doc: any) {
   writeFileSync(`./examples/html/example-${i}.html`, drawPageAsHTML(doc, i));
 }
+
+function getPageText(i: number, { getPageText }: any, doc: any) {
+  const text = getPageText(doc, i);
+  console.log('Page text', i, text);
+}
+
 
 function decodeUri(uri: string) {
   return Buffer.from(uri.slice(23), "base64");

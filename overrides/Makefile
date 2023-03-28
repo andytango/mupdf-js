@@ -26,6 +26,7 @@ $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 		-s WASM=1 \
 		-s VERBOSE=0 \
 		-s INITIAL_MEMORY=750MB \
+		-s MAXIMUM_MEMORY=4096MB \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap", "FS"]' \
 		-s MODULARIZE=1 \

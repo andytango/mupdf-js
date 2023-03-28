@@ -257,7 +257,7 @@ char *getPageText(fz_document *doc, int number)
     page = fz_load_page(ctx, doc, number - 1);
     stext = fz_new_stext_page_from_page(ctx, page, NULL);
     fz_buffer *buf = fz_new_buffer_from_stext_page(ctx, stext);
-    char *bufStr = malloc(buf->len);
+    char *bufStr = malloc(buf->len + 1);
     sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
     return bufStr;
 }
@@ -289,7 +289,7 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
         fz_append_string(ctx, buf, quadStr);
     }
 
-    char *bufStr = malloc(buf->len);
+    char *bufStr = malloc(buf->len + 1);
     sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
     return bufStr;
 }
