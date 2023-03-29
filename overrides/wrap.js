@@ -9,8 +9,27 @@ Module.locateFile = function (path, prefix) {
   return path;
 };
 
+
+
 Module.onRuntimeInitialized = function () {
   Module.ccall("initContext");
+
+  var isNode = typeof process === "object" && typeof process.versions === "object" && typeof process.versions.node === "string";
+
+  function parseDto(ptr) {
+    const dataLen = new Uint32Array(HEAPU8.slice(ptr, ptr + 4).buffer)[0];
+    return HEAPU8.slice(ptr + 4, ptr + 4 + dataLen);
+  }
+
+  function uint8ArrayToString(data) {
+    if (isNode) {
+      return Buffer.from(data).toString('utf8');
+    } else {
+      return new TextDecoder().decode(data);
+    }
+  }
+
+  var dropDto = Module.cwrap("dropDto", "", ["number"]);
   mupdf.openDocument = Module.cwrap("openDocument", "number", ["string"]);
   mupdf.freeDocument = Module.cwrap("freeDocument", "null", ["number"]);
   mupdf.documentTitle = Module.cwrap("documentTitle", "string", ["number"]);
@@ -30,30 +49,83 @@ Module.onRuntimeInitialized = function () {
     "number",
     "number",
   ]);
-  mupdf.drawPageAsPNG = Module.cwrap("drawPageAsPNG", "string", [
+  const drawPageAsPNGRaw = Module.cwrap("drawPageAsPNGRaw", "number", [
     "number",
     "number",
     "number",
   ]);
-  mupdf.drawPageAsHTML = Module.cwrap("drawPageAsHTML", "string", [
+
+  mupdf.drawPageAsPNGRaw = (doc, pageNumber, resolution) => {
+    const dto = drawPageAsPNGRaw(doc, pageNumber, resolution);
+    const data = parseDto(dto);
+    dropDto(dto);
+    return data;
+  }
+
+  const drawPageAsPNG = Module.cwrap("drawPageAsPNG", "number", [
+    "number",
     "number",
     "number",
   ]);
-  mupdf.drawPageAsSVG = Module.cwrap("drawPageAsSVG", "string", [
+
+  mupdf.drawPageAsPNG = (doc, pageNumber, resolution) => {
+    const dto = drawPageAsPNG(doc, pageNumber, resolution);
+    const data = parseDto(dto);
+    const str = uint8ArrayToString(data.slice(0, -1));
+    dropDto(dto);
+    return str;
+  }
+
+
+  const drawPageAsHTML = Module.cwrap("drawPageAsHTML", "number", [
     "number",
     "number",
   ]);
+
+  mupdf.drawPageAsHTML = (doc, pageNumber) => {
+    const dto = drawPageAsHTML(doc, pageNumber);
+    const data = parseDto(dto);
+    const str = uint8ArrayToString(data.slice(0, -1));
+    dropDto(dto);
+    return str;
+  }
+
+  const drawPageAsSVG = Module.cwrap("drawPageAsSVG", "number", [
+    "number",
+    "number",
+  ]);
+
+  mupdf.drawPageAsSVG = (doc, pageNumber) => {
+    const dto = drawPageAsSVG(doc, pageNumber);
+    const data = parseDto(dto);
+    const str = uint8ArrayToString( data.slice(0, -1));
+    dropDto(dto);
+    return str;
+  }
+
   mupdf.loadOutline = Module.cwrap("loadOutline", "number", ["number"]);
   mupdf.freeOutline = Module.cwrap("freeOutline", null, ["number"]);
   mupdf.outlineTitle = Module.cwrap("outlineTitle", "string", ["number"]);
   mupdf.outlinePage = Module.cwrap("outlinePage", "number", ["number"]);
   mupdf.outlineDown = Module.cwrap("outlineDown", "number", ["number"]);
   mupdf.outlineNext = Module.cwrap("outlineNext", "number", ["number"]);
-  mupdf.getPageText = Module.cwrap("getPageText", "string", ["number", "number"]);
-  const searchPageText = Module.cwrap("searchPageText", "string", ["number", "number", "string", "number"]);
+
+  const getPageText = Module.cwrap("getPageText", "number", ["number", "number"]);
+
+  mupdf.getPageText = ((doc, pageNumber) => {
+    const dto = getPageText(doc, pageNumber);
+    const data = parseDto(dto);
+    const str = uint8ArrayToString(data.slice(0, -1));
+    dropDto(dto);
+    return str
+  });
+
+  const searchPageText = Module.cwrap("searchPageText", "number", ["number", "number", "string", "number"]);
 
   mupdf.searchPageText = (doc, pageNumber, searchString, maxHits) => {
-    const resultStr = searchPageText(doc, pageNumber, searchString, maxHits);
+    const dto = searchPageText(doc, pageNumber, searchString, maxHits);
+    const data = parseDto(dto);
+    const resultStr = uint8ArrayToString(data);
     return resultStr.slice(0, -1).split('\n').map((line) => {
       const [x, y, w, h] = line.split(';').map(item => parseFloat(item));
       return {x, y, w, h};

@@ -19,19 +19,10 @@ async function main() {
   for (let i = 1; i <= n; i++) {
     console.log("Page " + i + "");
     writePageToPngFile(i, mupdf, doc);
+    writePageToPngRawFile(i, mupdf, doc);
     writePageToSvgFile(i, mupdf, doc);
     writePageToHtmlFile(i, mupdf, doc);
-    getPageText(i, mupdf, doc);
-  }
-  console.groupEnd();
-
-  console.group("Stress test...");
-  let iterations = 100000;
-  while (iterations--) {
-    for (let i = 1; i <= n; i++) {
-      mupdf.searchPageText(doc, i, "a", 1000);
-      getPageText(i, mupdf, doc);
-    }
+    writePageSearchToFile(i, mupdf, doc);
   }
   console.groupEnd();
 }
@@ -43,6 +34,13 @@ function writePageToPngFile(i: number, { drawPageAsPNG }: any, doc: any) {
   );
 }
 
+function writePageToPngRawFile(i: number, { drawPageAsPNGRaw }: any, doc: any) {
+  writeFileSync(
+    `./examples/png/example-raw-${i}.png`,
+    drawPageAsPNGRaw(doc, i, 600)
+  );
+}
+
 function writePageToSvgFile(i: number, { drawPageAsSVG }: any, doc: any) {
   writeFileSync(`./examples/svg/example-${i}.svg`, drawPageAsSVG(doc, i));
 }
@@ -51,11 +49,12 @@ function writePageToHtmlFile(i: number, { drawPageAsHTML }: any, doc: any) {
   writeFileSync(`./examples/html/example-${i}.html`, drawPageAsHTML(doc, i));
 }
 
-function getPageText(i: number, { getPageText }: any, doc: any) {
-  const text = getPageText(doc, i);
-  console.log('Page text', i, text);
+function writePageSearchToFile(i: number, { searchPageText }: any, doc: any) {
+  writeFileSync(
+    `./examples/search/example-${i}-search.json`,
+    JSON.stringify(searchPageText(doc, i, 'lorem', 10), null, "  ")
+  );
 }
-
 
 function decodeUri(uri: string) {
   return Buffer.from(uri.slice(23), "base64");

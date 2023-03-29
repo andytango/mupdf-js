@@ -40,6 +40,12 @@ export namespace MuPdf {
       dpi: resolution
     ): string;
 
+    drawPageAsPNGRaw(
+      doc: DocumentHandle,
+      page: pageNumber,
+      dpi: resolution
+    ): Uint8Array;
+
     drawPageAsHTML(doc: DocumentHandle, page: pageNumber): string;
 
     drawPageAsSVG(doc: DocumentHandle, page: pageNumber): string;

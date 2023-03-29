@@ -4,6 +4,14 @@
 
 static fz_context *ctx;
 
+char* makeDto(fz_buffer *buf) {
+    char *dto = malloc(4 + buf->len);
+    uint32_t buf_len = (uint32_t)buf->len;
+    memcpy(dto, &buf_len, 4);
+    memcpy(dto + 4, buf->data, buf->len);
+    return dto;
+}
+
 EMSCRIPTEN_KEEPALIVE
 void initContext(void)
 {
@@ -50,13 +58,10 @@ static void loadPage(fz_document *doc, int number)
 EMSCRIPTEN_KEEPALIVE
 char *drawPageAsHTML(fz_document *doc, int number)
 {
-	static unsigned char *data = NULL;
 	fz_stext_page *text;
 	fz_buffer *buf;
 	fz_output *out;
 
-	fz_free(ctx, data);
-	data = NULL;
 
 	loadPage(doc, number);
 
@@ -72,23 +77,19 @@ char *drawPageAsHTML(fz_document *doc, int number)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
-	fz_buffer_extract(ctx, buf, &data);
-	fz_drop_buffer(ctx, buf);
+	char *dto = makeDto(buf);
+    fz_drop_buffer(ctx, buf);
 
-	return (char*)data;
+	return dto;
 }
 
 EMSCRIPTEN_KEEPALIVE
 char *drawPageAsSVG(fz_document *doc, int number)
 {
-	static unsigned char *data = NULL;
 	fz_buffer *buf;
 	fz_output *out;
 	fz_device *dev;
 	fz_rect bbox;
-
-	fz_free(ctx, data);
-	data = NULL;
 
 	loadPage(doc, number);
 
@@ -106,23 +107,20 @@ char *drawPageAsSVG(fz_document *doc, int number)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
-	fz_buffer_extract(ctx, buf, &data);
-	fz_drop_buffer(ctx, buf);
+	char *dto = makeDto(buf);
+    fz_drop_buffer(ctx, buf);
 
-	return (char*)data;
+	return dto;
 }
 
 EMSCRIPTEN_KEEPALIVE
 char *drawPageAsPNG(fz_document *doc, int number, float dpi)
 {
-	static unsigned char *data = NULL;
 	float zoom = dpi / 72;
 	fz_pixmap *pix;
 	fz_buffer *buf;
 	fz_output *out;
 
-	fz_free(ctx, data);
-	data = NULL;
 
 	loadPage(doc, number);
 
@@ -138,10 +136,41 @@ char *drawPageAsPNG(fz_document *doc, int number, float dpi)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
-	fz_buffer_extract(ctx, buf, &data);
-	fz_drop_buffer(ctx, buf);
 
-	return (char*)data;
+	char *dto = makeDto(buf);
+    fz_drop_buffer(ctx, buf);
+
+	return dto;
+}
+
+EMSCRIPTEN_KEEPALIVE
+char *drawPageAsPNGRaw(fz_document *doc, int number, float dpi)
+{
+	float zoom = dpi / 72;
+	fz_pixmap *pix;
+	fz_buffer *buf;
+	fz_output *out;
+
+
+	loadPage(doc, number);
+
+	buf = fz_new_buffer(ctx, 0);
+	{
+		out = fz_new_output_with_buffer(ctx, buf);
+		{
+			pix = fz_new_pixmap_from_page(ctx, lastPage, fz_scale(zoom, zoom), fz_device_rgb(ctx), 0);
+			fz_write_pixmap_as_png(ctx, out, pix);
+			fz_drop_pixmap(ctx, pix);
+		}
+		fz_write_byte(ctx, out, 0);
+		fz_close_output(ctx, out);
+		fz_drop_output(ctx, out);
+	}
+
+	char *dto = makeDto(buf);
+    fz_drop_buffer(ctx, buf);
+
+	return dto;
 }
 
 static fz_irect pageBounds(fz_document *doc, int number, float dpi)
@@ -149,6 +178,7 @@ static fz_irect pageBounds(fz_document *doc, int number, float dpi)
 	loadPage(doc, number);
 	return fz_round_rect(fz_transform_rect(fz_bound_page(ctx, lastPage), fz_scale(dpi/72, dpi/72)));
 }
+
 
 EMSCRIPTEN_KEEPALIVE
 int pageWidth(fz_document *doc, int number, float dpi)
@@ -167,12 +197,8 @@ int pageHeight(fz_document *doc, int number, float dpi)
 EMSCRIPTEN_KEEPALIVE
 char *pageLinks(fz_document *doc, int number, float dpi)
 {
-	static unsigned char *data = NULL;
 	fz_buffer *buf;
 	fz_link *links, *link;
-
-	fz_free(ctx, data);
-	data = NULL;
 
 	loadPage(doc, number);
 
@@ -198,10 +224,12 @@ char *pageLinks(fz_document *doc, int number, float dpi)
 		fz_append_byte(ctx, buf, 0);
 		fz_drop_link(ctx, links);
 	}
-	fz_buffer_extract(ctx, buf, &data);
+
+	char *dto = makeDto(buf);
+
 	fz_drop_buffer(ctx, buf);
 
-	return (char*)data;
+	return dto;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -250,30 +278,31 @@ fz_outline *outlineNext(fz_outline *node)
 }
 
 EMSCRIPTEN_KEEPALIVE
+void dropDto(char *dto) {
+	free(dto);
+}
+
+EMSCRIPTEN_KEEPALIVE
 char *getPageText(fz_document *doc, int number)
 {
     fz_page *page;
     fz_stext_page *stext;
 
-    static char *bufStr = NULL;
-    free(bufStr);
-    bufStr = NULL;
-
-
     page = fz_load_page(ctx, doc, number - 1);
     stext = fz_new_stext_page_from_page(ctx, page, NULL);
     fz_buffer *buf = fz_new_buffer_from_stext_page(ctx, stext);
 
-    bufStr = malloc(buf->len + 1);
-    memset(bufStr, 0, buf->len + 1);
-    sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
+
+
+    char *dto = makeDto(buf);
 
     fz_drop_buffer(ctx, buf);
+
     fz_drop_stext_page(ctx, stext);
     fz_drop_page(ctx, page);
 
 
-    return bufStr;
+    return dto;
 }
 
 
@@ -282,9 +311,6 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
 {
     fz_buffer *buf;
     fz_quad hits[maxHits];
-    static char *bufStr = NULL;
-    free(bufStr);
-    bufStr = NULL;
 
     if (maxHits <= 0) {
         return NULL;
@@ -306,11 +332,7 @@ char *searchPageText(fz_document *doc, int number, char *searchString, int maxHi
         fz_append_string(ctx, buf, quadStr);
     }
 
-    bufStr = malloc(buf->len + 1);
-    memset(bufStr, 0, buf->len + 1);
-    sprintf(bufStr, "%.*s", (int)buf->len, buf->data);
+    char *dto = makeDto(buf);
 
-    fz_drop_buffer(ctx, buf);
-
-    return bufStr;
+    return dto;
 }
