@@ -44,11 +44,24 @@ Module.onRuntimeInitialized = function () {
     "number",
     "number",
   ]);
-  mupdf.pageLinks = Module.cwrap("pageLinks", "string", [
+
+  const pageLinks = Module.cwrap("pageLinks", "number", [
     "number",
     "number",
     "number",
   ]);
+
+
+
+  mupdf.pageLinks = (doc, pageNumber, dpi) => {
+    const dto = pageLinks(doc, pageNumber, dpi);
+    const data = parseDto(dto);
+    const str = uint8ArrayToString(data.slice(0, -1));
+    dropDto(dto);
+    return str;
+  }
+
+
   const drawPageAsPNGRaw = Module.cwrap("drawPageAsPNGRaw", "number", [
     "number",
     "number",

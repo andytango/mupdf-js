@@ -53,7 +53,6 @@ type of an expression, the definition reaching a reference, the set of possible 
 point). Relatedly, they want to catch a large number of common bugs with few false positives.
 
 arXiv:1708.08021v2  [cs.PL]  30 Aug 2017
-
 "
 `;
 
@@ -115,7 +114,6 @@ Refinements also power a common technique to encode algebraic data types in Java
 are used quite widely (to manage actions and dispatchers, data and queries, etc. in user interface
 
 1The values false, 0, "", null, undefined, and NaN are falsy. All other values are truthy.
-
 "
 `;
 
@@ -238,7 +236,6 @@ scale such an analysis?
 
 Fast type checking. The key to Flow’s speed is modularity: the ability to break the analysis into
 file-sized chunks that can be assembled later. Fortunately, JavaScript is already written using files
-
 "
 `;
 
@@ -301,7 +298,6 @@ LANGUAGE FLOWCORE
 We consider a minimal subset of JavaScript that includes functions, mutable variables, primitive
 values and records. Notably, we leave out data structures like dictionaries and arrays, as well as
 object-oriented features like this, methods, classes, and inheritance. These parts of the language
-
 "
 `;
 
@@ -366,7 +362,6 @@ Assumption. We assume an α-renaming pre-pass over the program’s AST that guar
 each variable definition point (which is either a var statement or an arrow definition) introduces a
 unique variable identifier. This is a fairly straightforward transformation for any preprocessor that
 helps avoid unintentional capture of variables in exported closures.
-
 "
 `;
 
@@ -461,7 +456,6 @@ Predicates. Key to our type refining process is the notion of predicates. A pred
 denoting a property of its implied argument. In our setting, syntactically it can be a base predicate
 p or its negation. Base predicates describe properties of constructed or primitive types. For the
 remaining sections we will keep these predicates abstract, but examples of these predicates are
-
 "
 `;
 
@@ -538,7 +532,6 @@ negation
 |
 ψ\\ε
 exclude effect
-
 "
 `;
 
@@ -617,7 +610,6 @@ Calls. Rule CG-Call handles calls. We approximate the outgoing environment with 
 sensitive widening of the current environment (instead of pessimistically erasing everything in
 scope). The meta-function widen (Figure 5) computes this new environment Γ′ by mapping each
 x : τ α to x : βα where β is a fresh type variable such that τ ≤ β ≤ α. For any variable x that gets
-
 "
 `;
 
@@ -702,7 +694,6 @@ potentially including fresh variables that are constrained in C. When ψ is x �
 relevant binding in the environment Γ to a fresh type β that is the result of the predicate refinement
 of the initial type τ with P (Rule Ref-Single). The rules that handle the typical logical operators
 (Ref-And and Ref-Or) are straightforward.
-
 "
 `;
 
@@ -792,7 +783,6 @@ respect to the output predicate mapping, parts ofψ1 that apply on names written
 when taking the conjunction withψ2. Rule CG-Or is the dual of the above rule, and works similarly.
 Finally, rules CG-Not and CG-Pred are straightforward. The former just negates the refinement
 and the latter introduces a refinement from a runtime test p.
-
 "
 `;
 
@@ -897,7 +887,6 @@ Example
 We now examine how the rules of Figures 4 – 8 handle the code in lines 8 – 28 in Figure 1. In
 the following we keep the produced type bindings on the left and constraint sets on the right.
 Whenever, a general type (exponent) is not made explicit, this means that it’s not important for that
-
 "
 `;
 
@@ -993,7 +982,6 @@ reset: ()
 x−→ void
 C ⊇ { null ≤ α8 }
 (10)
-
 "
 `;
 
@@ -1076,7 +1064,6 @@ which carries out the task of applying a function’s effect on the variables th
 Rule CP-Havoc recovers soundness by restoring the conservative types for variables that are
 updated through function calls (CG-Call) or are reassigned during conditional type refinement
 (Ref-Effect). Lets assume the havoc operation was introduced due to the former rule. (The latter
-
 "
 `;
 
@@ -1138,7 +1125,6 @@ We continue where we left off in the example of Section 3.1, by applying the rul
 C, in order to discover inconsistencies or prove the absence thereof.
 
 2Section A.4 includes a formal definition of polarity and type contexts.
-
 "
 `;
 
@@ -1208,7 +1194,6 @@ C ⊇ { null ≤ Get ({kind : α10}) }
 
 This latter constraint signals a consistency violation, keeping Flow sound with respect to variable
 updates that invalidate prior refinements.
-
 "
 `;
 
@@ -1305,7 +1290,6 @@ Runtime Values. To account for heap-allocated values, we introduce locations ℓ
 heaps. Together with constants they synthesize runtime values, which are normal form as far as
 execution is concerned. Locations are also added to the set of expressions in our runtime language
 along with all other expression forms introduced earlier.
-
 "
 `;
 
@@ -1361,7 +1345,6 @@ been checked with the above algorithm and has been found consistent, then its ex
 lead to uncaught type errors (e.g., “undefined is not a function”). Introducing this intermediate step
 in our metatheory is not mandatory, but it vastly reduces the complexity of reasoning about type
 safety, compared to the inference version of Section 3.
-
 "
 `;
 
@@ -1482,7 +1465,6 @@ system, and can be extended to types, effects and environments in a point-wise m
 c in the inference system correspond to subtyping relations in the concrete system for both types
 and effects. We can use the same substitution ρ to convert a constraintc to one or multiple subtyping
 constraints over concrete types or effects. Since our type language has been kept simple overall,
-
 "
 `;
 
@@ -1550,7 +1532,6 @@ either case of the union type annotation. But since the inferred type may contai
 may not be obvious which case to pick. Consider the code in Figure 12 (left), where the parameter
 f on line 33 has a type that is the union of two function types. The call on line 33 is safe, since both
 function types take string. However, it is unclear which choice of function type to use for id on
-
 "
 `;
 
@@ -1650,7 +1631,6 @@ performance, in terms of both time and space. It is also a natural fit for moder
 code is typically split across a (large) number of (small) files; every file is mapped to a module,
 and possibly imports other modules; definitions are local by default, unless they are exported; and
 accessing global definitions other than builtins is generally discouraged.
-
 "
 `;
 
@@ -1710,7 +1690,6 @@ resolve to files F1, . . . , Fn that have their signature constraints c⋆
 1 , . . . ,c⋆
 n and exported types
 τ1, . . . ,τn.
-
 "
 `;
 
@@ -1774,7 +1753,6 @@ PARALLELIZATION
 
 We use a map/reduce algorithm augmented with shared memory communication for parallelizing
 various stages of type checking, building on and extending Hack’s model [Hack 2014].
-
 "
 `;
 
@@ -1838,7 +1816,6 @@ Parallelizing Parsing
 
 Files are parsed in parallel, in no particular order, using a static next. Every job writes the abstract
 syntax trees for corresponding files to shared memory.
-
 "
 `;
 
@@ -1950,7 +1927,6 @@ Distribution of annotations. For each file, we counted the number of annotations
 the total number of locations that could potentially be annotated. Figure 13 shows the distribution
 of these relative numbers across the repository. The median is 29% annotations. In aggregate, there
 are around 686K annotations vs. 1502K other locations that could potentially be annotated but
-
 "
 `;
 
@@ -2010,7 +1986,6 @@ developer productivity by providing tooltips through IDEs. Unlike Flow, it focus
 “likely errors” without caring about soundness [Bierman et al. 2014]. Type inference in TypeScript is
 mostly local and in some cases contextual; it doesn’t perform global type inference like Flow, so in
 general more annotations are needed. Whenever type annotations are missing, they are considered
-
 "
 `;
 
@@ -2073,7 +2048,6 @@ suffers from limited type inference compared to Flow.
 Static Objects. Choi et al. [2015] propose a static type system for ahead-of-time compilation of
 JavaScript that guarantees fixed object layout. Its type inference is based on very similar foundations
 as Flow. SJS focuses mainly on taming legacy object-oriented features (constructor functions,
-
 "
 `;
 
@@ -2132,7 +2106,6 @@ not context-sensitive, due in part to anecdotal concerns about performance in Do
 
 Constraint Graph Simplification. The research directions above already include several simplifi-
 cation techniques [Fähndrich and Aiken 1996; Flanagan 1997]. To further improve performance of
-
 "
 `;
 
@@ -2189,7 +2162,6 @@ Thanks to Basil Hosmer, Jeff Morrison, Nat Mote, Satish Chandra, Caleb Meredith,
 for their contributions to Flow’s design and implementation, to Julien Verlaguet, Dwayne Reeves,
 and Yoann Padioleau for their work on infrastructure that Flow is built on, and to anonymous
 reviewers for their valuable feedback on previous drafts of this paper.
-
 "
 `;
 
@@ -2273,7 +2245,6 @@ Symposium on Dynamic Languages (DLS 2016). ACM, New York, NY, USA, 1–12.
 
 Simon Holm Jensen, Magnus Madsen, and Anders Møller. 2011. Modeling the HTML DOM and Browser API in Static
 Analysis of JavaScript Web Applications. In Proceedings of the 19th ACM SIGSOFT Symposium and the 13th European
-
 "
 `;
 
@@ -2350,7 +2321,6 @@ ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI �
 310–325.
 
 A.K. Wright and M. Felleisen. 1994. A Syntactic Approach to Type Soundness. Inf. Comput. 115, 1 (Nov. 1994), 38–94.
-
 "
 `;
 
@@ -2410,7 +2380,6 @@ The definition of the subtyping relation ≤ over ground types follows Pottier [
 and as in Pottier [1998, Proposition 1.3], τ ≤ τ ′ is equivalent to:
 
 ∀k ≥ 0 .τ ≤k τ ′
-
 "
 `;
 
@@ -2501,7 +2470,6 @@ Definition A.3 (Constraint Set Satisfaction under Substitution). We say that a g
 The following proposition connects constraint set consistency that was discussed in Section 3.3
 
 with constraint satisfiability under ground substitution defined above.
-
 "
 `;
 
@@ -2664,7 +2632,6 @@ n
 
 The critical part in the above definition is that negative contexts t− do not contain joins at their
 top-levels.
-
 "
 `;
 
@@ -2835,7 +2802,6 @@ G (∆), where ε is a concrete effect, to denote the
 environment ∆[x �→ G(x) | x ∈ ε ].
 Environment join (⊔) and environment refinement (::) have similar definitions as in their con-
 straint generation counterparts of Figure 5, and so are omitted here.
-
 "
 `;
 
@@ -2981,7 +2947,6 @@ Figure 18 contains a selection of rules for this judgment.
 When inverting typing relations, we often need to decompose the typing of filled evaluation
 contexts E⟨e⟩. The following lemma deconstructs the typing of such an expression to the typing of
 a bare evaluation context E and a typing of the filling expression e.
-
 "
 `;
 
@@ -3102,7 +3067,6 @@ G ⊩Σ X: τ ⟨τ ′⟩
 
 Figure 19 contains the rules for this judgment. The interesting rule here is Rule RT-Stack-C, that
 types a stack X, L.E. Following the flow of execution the rule first checks the frame E that is on
-
 "
 `;
 
@@ -3192,7 +3156,6 @@ specified in the store typing Σ.
 Configuration. Finally, Figure 21 shows the typing rules for runtime configurations where the
 terms are either expressions, function bodies or statements. These largely follow the same principles
 as the typing for stacks that we saw earlier.
-
 "
 `;
 
@@ -3284,7 +3247,6 @@ then
 ⊩
 
 ρ (Γ′)1
-
 "
 `;
 
@@ -3400,7 +3362,6 @@ By inverting Rule CG-Assign on (D.2.15):
 
 C = C0 ∪ {τ ≤ α }
 (D.2.18)
-
 "
 `;
 
@@ -3506,7 +3467,6 @@ I. If ∆′ ≤ ∆, then
 
 ∆′
 1
-
 "
 `;
 
@@ -3611,7 +3571,6 @@ By (D.6.4) it holds that ∆0(y) = ∆′(y), and so by (D.6.6):
 
 ∆′
 (D.6.8)
-
 "
 `;
 
@@ -3752,7 +3711,6 @@ S � ⟨H, X, L⟩, a target state S′ � ⟨H′, X, L′⟩ if, under a hea
 ⊩
 
 ∆1
-
 "
 `;
 
@@ -3840,7 +3798,6 @@ By definition of ∆′, it holds that:
 
 ∆′ = ∆[x �→ ∆(x) :: p ]
 (D.7.6)
-
 "
 `;
 
@@ -3964,7 +3921,6 @@ G ⊩Σ′ H0, ℓ �→ n
 which proves (a).
 
 By (D.7.11) we prove (b), (c) and (d).
-
 "
 `;
 
@@ -4089,7 +4045,6 @@ e ≡ e0 &&e1
 e′ ≡ e′
 0 &&e1
 (D.7.25)
-
 "
 `;
 
@@ -4237,7 +4192,6 @@ By (D.7.35) and (D.7.40):
 ∴
 ∆′
 1 :: ψ ′ ≤ ∆1 :: ψ
-
 "
 `;
 
@@ -4357,7 +4311,6 @@ By (D.7.43) and (D.7.44):
 
 ψ = ψ2
 (D.7.50)
-
 "
 `;
 
@@ -4448,7 +4401,6 @@ S ≡ ⟨H; X; L⟩
 
 S′ ≡ ⟨H′; X′; L′⟩
 (D.9.2)
-
 "
 `;
 
@@ -4567,7 +4519,6 @@ By inverting Rule T-Call on (D.9.15):
 ∆3 = eraseεc
 G (∆2)
 (D.9.20)
-
 "
 `;
 
@@ -4665,7 +4616,6 @@ heap typing Σ′. Σ′ coincides with Σ on their common domain dom(L), so:
 
 ∆0 = Σ′ ◦ L0 = Σ ◦ L0
 (D.9.35)
-
 "
 `;
 
@@ -4788,7 +4738,6 @@ X \\ X0
 (D.9.49)
 
 We examine the two non-overlapping domains separately:
-
 "
 `;
 
@@ -4924,7 +4873,6 @@ By (D.9.20) and (D.9.60):
 ��
 (X0∩X) \\ εc
 (D.9.61)
-
 "
 `;
 
@@ -5072,7 +5020,6 @@ X \\ X0
 �
 ≤ ∆3
 (D.9.74)
-
 "
 `;
 
@@ -5229,7 +5176,6 @@ L0 \\ L ≤ ΣX
 ��
 L0 \\ L
 (D.9.89)
-
 "
 `;
 
@@ -5317,7 +5263,6 @@ S ≡ ⟨H; X; L⟩
 (D.10.1)
 
 We prove the desired by induction on the given derivation.
-
 "
 `;
 
@@ -5421,7 +5366,6 @@ on the derivation of (D.10.16):
 
 G ⊩Σ H0, ℓ �→ ℓ′
 (D.10.17)
-
 "
 `;
 
@@ -5505,7 +5449,6 @@ which proves (b).
 only impose very minimal preconditions for the respective transition to happen.
 
 • RT-Conf-S Proved by applying Theorem D.11 on the statement part of the body.
-
 "
 `;
 
@@ -5537,6 +5480,5 @@ well typed state.
 
 Proof. The proof follows by subsequent applications of Theorems D.10, D.11 and D.9.
 □
-
 "
 `;
