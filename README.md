@@ -73,6 +73,9 @@ async function handleSomePdf(file) {
   const png = mupdf.drawPageAsPNG(doc, 1, 300);
   const svg = mupdf.drawPageAsSVG(doc, 1);
   const html = mupdf.drawPageAsHTML(doc, 1);
+  
+  // This method returns Uint8Array
+  const pngRaw = mupdf.drawPageAsPNGRaw(doc, 1, 300);
 }
 ```
 
@@ -81,7 +84,11 @@ async function handleSomePdf(file) {
 ### PNG
 
 ```js
-mupdf.drawPageAsPNG(document, page, resolution);
+// Returns PNG as data uri string
+mupdf.drawPageAsPNG(document, page, resolution); 
+
+// Returns PNG data as Uint8Array
+mupdf.drawPageAsPNGRaw(document, page, resolution); 
 ```
 
 Arguments:
