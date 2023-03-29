@@ -127,8 +127,8 @@ Module.onRuntimeInitialized = function () {
     const data = parseDto(dto);
     const resultStr = uint8ArrayToString(data);
     return resultStr.slice(0, -1).split('\n').map((line) => {
-      const [x, y, w, h] = line.split(';').map(item => parseFloat(item));
-      return {x, y, w, h};
+      const [x, y, w, h, c] = line.split(';').map(item => parseFloat(item));
+      return {x, y, w, h, isContinuation: c === 1};
     })
   }
 };

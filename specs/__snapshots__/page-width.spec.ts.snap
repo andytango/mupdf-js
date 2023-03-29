@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pageWidth Page [1 / 4] - should return the page width 1`] = `612`;
+
+exports[`pageWidth Page [2 / 4] - should return the page width 1`] = `612`;
+
+exports[`pageWidth Page [3 / 4] - should return the page width 1`] = `612`;
+
+exports[`pageWidth Page [4 / 4] - should return the page width 1`] = `612`;

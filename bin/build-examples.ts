@@ -11,7 +11,7 @@ async function main() {
   const doc = openDocument("example.pdf");
   const n = countPages(doc);
 
-  ["png", "svg", "html"].forEach((ext) => {
+  ["png", "svg", "html", "text", "search"].forEach((ext) => {
     mkdirSync(`./examples/${ext}`, { recursive: true });
   });
 
@@ -22,6 +22,7 @@ async function main() {
     writePageToPngRawFile(i, mupdf, doc);
     writePageToSvgFile(i, mupdf, doc);
     writePageToHtmlFile(i, mupdf, doc);
+    writePageToTextFile(i, mupdf, doc);
     writePageSearchToFile(i, mupdf, doc);
   }
   console.groupEnd();
@@ -55,6 +56,12 @@ function writePageSearchToFile(i: number, { searchPageText }: any, doc: any) {
     JSON.stringify(searchPageText(doc, i, 'lorem', 10), null, "  ")
   );
 }
+
+function writePageToTextFile(i: number, { getPageText }: any, doc: any) {
+  writeFileSync(`./examples/text/example-${i}.txt`, getPageText(doc, i));
+}
+
+
 
 function decodeUri(uri: string) {
   return Buffer.from(uri.slice(23), "base64");

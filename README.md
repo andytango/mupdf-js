@@ -3,6 +3,7 @@ This is a port of [MuPDF](https://mupdf.com/docs/) to javascript and webassembly
 
 - 🔥 **Blazing fast** rendering of PDFs to **PNG**, **SVG** and even **HTML**
 - 💼 Run in the **web browser** or your **server**. Basically any platform that supports Webassembly!
+- ☑ Supports Typescript
 - 🗺️ A super **simple** API that's also **completely flexible**, see below...
 
 # 🏁 Getting Started
@@ -17,8 +18,8 @@ npm i mupdf-js
 
 Before you do any processing, you'll need to initialise the MuPdf library:
 
-```tsx
-import createMuPdf from "mupdf-js";
+```js
+import { createMuPdf } from "mupdf-js";
 
 async function handleSomePdf(file: File) {
   const mupdf = await createMuPdf();
@@ -32,7 +33,7 @@ In the *browser*, you'll most likely retrieve a [File](https://developer.mozilla
 You'll need to convert the file firstly to an `ArrayBuffer`, then to a `Uint8Array`:
 
 ```js
-import createMuPdf from "mupdf-js";
+import { createMuPdf } from "mupdf-js";
 
 async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
@@ -46,7 +47,7 @@ async function handleSomePdf(file) {
 Once you have this, you can *load* the file into the MuPdf environment, creating a MuPdf *document*:
 
 ```js
-import createMuPdf from "mupdf-js";
+import { createMuPdf } from "mupdf-js";
 
 async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
@@ -59,7 +60,7 @@ async function handleSomePdf(file) {
 You now have three different options to render the PDF document:
 
 ```js
-import createMuPdf from "mupdf-js";
+import { createMuPdf } from "mupdf-js";
 
 async function handleSomePdf(file) {
   const mupdf = await createMuPdf();
@@ -142,6 +143,12 @@ Arguments:
 
 Returns: *array of found rectangles of text matches ({x: number, y: number, w: number, h: number}[])*
 
+You should set `maxHits` to an appropriate level that a user would expect (for example 100), or allow users to set their own limit. Alternatively, if you want to allow effectively unlimited search hits (and risk running out of memory), you can set it to C's maximum unsigned 32-bit integer size, which is 4294967295.
+
+# Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
 # License
 
-AGPL, subject to the [MuPDF license](https://www.mupdf.com/license.html).
+AGPL, subject to the [MuPDF license](https://www.mupdf.com/licensing/).
