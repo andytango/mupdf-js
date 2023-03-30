@@ -1,10 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import initMuPdf from "../dist/libmupdf";
+import createMuPdf from "../dist";
 
 main();
 
 async function main() {
-  const mupdf = await initMuPdf();
+  const mupdf = await createMuPdf();
   const { FS, openDocument, countPages } = mupdf;
   const pdfFile = readFileSync("./examples/example.pdf");
   FS.writeFile("example.pdf", pdfFile);
@@ -15,7 +16,7 @@ async function main() {
     mkdirSync(`./examples/${ext}`, { recursive: true });
   });
 
-  console.group("Generating example outputs...");
+  /*console.group("Generating example outputs...");
   for (let i = 1; i <= n; i++) {
     console.log("Page " + i + "");
     writePageToPngFile(i, mupdf, doc);
@@ -25,7 +26,22 @@ async function main() {
     writePageToTextFile(i, mupdf, doc);
     writePageSearchToFile(i, mupdf, doc);
   }
-  console.groupEnd();
+  console.groupEnd();*/
+
+  let iterations = 10000;
+
+  while (iterations--) {
+    const doc = mupdf.load(pdfFile);
+    const n = countPages(doc);
+    for (let i = 1; i <= n; i++) {
+      mupdf.drawPageAsPNG(doc, i, 72);
+      mupdf.drawPageAsPNGRaw(doc, i, 72);
+      mupdf.getPageText(doc, i);
+      mupdf.pageHeight(doc, i, 72);
+      mupdf.pageWidth(doc, i, 72);
+    }
+    mupdf.freeDocument(doc);
+  }
 }
 
 function writePageToPngFile(i: number, { drawPageAsPNG }: any, doc: any) {

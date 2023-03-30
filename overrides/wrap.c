@@ -37,23 +37,6 @@ int countPages(fz_document *doc)
 	return fz_count_pages(ctx, doc);
 }
 
-static fz_page *lastPage = NULL;
-
-static void loadPage(fz_document *doc, int number)
-{
-	static fz_document *lastPageDoc = NULL;
-	static int lastPageNumber = -1;
-	if (lastPageNumber != number || lastPageDoc != doc)
-	{
-		if (lastPage)
-			fz_drop_page(ctx, lastPage);
-		lastPage = fz_load_page(ctx, doc, number-1);
-		lastPageDoc = doc;
-		lastPageNumber = number;
-	}
-}
-
-
 
 EMSCRIPTEN_KEEPALIVE
 char *drawPageAsHTML(fz_document *doc, int number)
@@ -61,9 +44,7 @@ char *drawPageAsHTML(fz_document *doc, int number)
 	fz_stext_page *text;
 	fz_buffer *buf;
 	fz_output *out;
-
-
-	loadPage(doc, number);
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
 
 	buf = fz_new_buffer(ctx, 0);
 	{
@@ -77,6 +58,8 @@ char *drawPageAsHTML(fz_document *doc, int number)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
+	fz_drop_page(ctx, lastPage);
+
 	char *dto = makeDto(buf);
     fz_drop_buffer(ctx, buf);
 
@@ -91,7 +74,7 @@ char *drawPageAsSVG(fz_document *doc, int number)
 	fz_device *dev;
 	fz_rect bbox;
 
-	loadPage(doc, number);
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
 
 	buf = fz_new_buffer(ctx, 0);
 	{
@@ -107,6 +90,8 @@ char *drawPageAsSVG(fz_document *doc, int number)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
+	fz_drop_page(ctx, lastPage);
+
 	char *dto = makeDto(buf);
     fz_drop_buffer(ctx, buf);
 
@@ -122,7 +107,7 @@ char *drawPageAsPNG(fz_document *doc, int number, float dpi)
 	fz_output *out;
 
 
-	loadPage(doc, number);
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
 
 	buf = fz_new_buffer(ctx, 0);
 	{
@@ -136,6 +121,7 @@ char *drawPageAsPNG(fz_document *doc, int number, float dpi)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
+	fz_drop_page(ctx, lastPage);
 
 	char *dto = makeDto(buf);
     fz_drop_buffer(ctx, buf);
@@ -152,7 +138,8 @@ char *drawPageAsPNGRaw(fz_document *doc, int number, float dpi)
 	fz_output *out;
 
 
-	loadPage(doc, number);
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
+
 
 	buf = fz_new_buffer(ctx, 0);
 	{
@@ -166,6 +153,7 @@ char *drawPageAsPNGRaw(fz_document *doc, int number, float dpi)
 		fz_close_output(ctx, out);
 		fz_drop_output(ctx, out);
 	}
+	fz_drop_page(ctx, lastPage);
 
 	char *dto = makeDto(buf);
     fz_drop_buffer(ctx, buf);
@@ -175,8 +163,10 @@ char *drawPageAsPNGRaw(fz_document *doc, int number, float dpi)
 
 static fz_irect pageBounds(fz_document *doc, int number, float dpi)
 {
-	loadPage(doc, number);
-	return fz_round_rect(fz_transform_rect(fz_bound_page(ctx, lastPage), fz_scale(dpi/72, dpi/72)));
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
+	fz_irect rect = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, lastPage), fz_scale(dpi/72, dpi/72)));
+	fz_drop_page(ctx, lastPage);
+	return rect;
 }
 
 
@@ -200,7 +190,7 @@ char *pageLinks(fz_document *doc, int number, float dpi)
 	fz_buffer *buf;
 	fz_link *links, *link;
 
-	loadPage(doc, number);
+	fz_page *lastPage = fz_load_page(ctx, doc, number - 1);
 
 	buf = fz_new_buffer(ctx, 0);
 	{
@@ -224,6 +214,8 @@ char *pageLinks(fz_document *doc, int number, float dpi)
 		fz_append_byte(ctx, buf, 0);
 		fz_drop_link(ctx, links);
 	}
+
+	fz_drop_page(ctx, lastPage);
 
 	char *dto = makeDto(buf);
 
