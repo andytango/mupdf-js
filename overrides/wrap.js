@@ -30,7 +30,17 @@ Module.onRuntimeInitialized = function () {
   }
 
   var dropDto = Module.cwrap("dropDto", "", ["number"]);
-  mupdf.openDocument = Module.cwrap("openDocument", "number", ["string"]);
+
+  var openDocument = Module.cwrap("openDocument", "number", ["string"]);
+
+  mupdf.openDocument = function (fileName) {
+      var doc = openDocument(fileName);
+      if (doc === 0) {
+        throw new Error('Can\'t open document');
+      }
+      return doc;
+  }
+
   mupdf.freeDocument = Module.cwrap("freeDocument", "null", ["number"]);
   mupdf.documentTitle = Module.cwrap("documentTitle", "string", ["number"]);
   mupdf.countPages = Module.cwrap("countPages", "number", ["number"]);

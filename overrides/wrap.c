@@ -22,7 +22,12 @@ void initContext(void)
 EMSCRIPTEN_KEEPALIVE
 fz_document *openDocument(const char *filename)
 {
-	return fz_open_document(ctx, filename);
+    fz_try(ctx) {
+		return fz_open_document(ctx, filename);
+	}
+	fz_catch(ctx) {
+	}
+	return NULL;
 }
 
 EMSCRIPTEN_KEEPALIVE

@@ -23,6 +23,7 @@ wasm: $(MUPDF_JS) $(MUPDF_WASM)
 $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 	BASH_SOURCE=$(EMSDK_DIR)/emsdk_env.sh; . $(EMSDK_DIR)/emsdk_env.sh; \
 	emcc -Wall -O3 -o $@ \
+		-fwasm-exceptions \
 		-s WASM=1 \
 		-s VERBOSE=0 \
 		-s INITIAL_MEMORY=750MB \
