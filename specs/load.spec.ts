@@ -19,6 +19,10 @@ describe("load", () => {
 
   it('should throw on invalid file', async () => {
     const mupdf = await createMuPdf();
+    mupdf.setLogger({
+      log: undefined,
+      errorLog: undefined
+    })
     expect(() => mupdf.load(getInvalidFile())).toThrow();
   });
 });

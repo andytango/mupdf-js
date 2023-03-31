@@ -7,7 +7,7 @@ main();
 async function main() {
   const mupdf = await createMuPdf();
   const { FS, openDocument, countPages } = mupdf;
-  const pdfFile = readFileSync("./examples/example.pdf");
+  /*const pdfFile = readFileSync("./examples/example.pdf");
   FS.writeFile("example.pdf", pdfFile);
   const doc = openDocument("example.pdf");
   const n = countPages(doc);
@@ -16,7 +16,7 @@ async function main() {
     mkdirSync(`./examples/${ext}`, { recursive: true });
   });
 
-  /*console.group("Generating example outputs...");
+  console.group("Generating example outputs...");
   for (let i = 1; i <= n; i++) {
     console.log("Page " + i + "");
     writePageToPngFile(i, mupdf, doc);
@@ -28,19 +28,23 @@ async function main() {
   }
   console.groupEnd();*/
 
+  const pdfFileLg = readFileSync("./examples/example-lg.pdf");
+
   let iterations = 10000;
 
   while (iterations--) {
-    const doc = mupdf.load(pdfFile);
-    const n = countPages(doc);
+    const ctx = mupdf.createContext();
+    const doc = mupdf.load(ctx, pdfFileLg);
+    const n = countPages(ctx, doc);
     for (let i = 1; i <= n; i++) {
-      mupdf.drawPageAsPNG(doc, i, 72);
-      mupdf.drawPageAsPNGRaw(doc, i, 72);
-      mupdf.getPageText(doc, i);
-      mupdf.pageHeight(doc, i, 72);
-      mupdf.pageWidth(doc, i, 72);
+      mupdf.drawPageAsPNG(ctx, doc, i, 72);
+      mupdf.drawPageAsPNGRaw(ctx, doc, i, 72);
+      mupdf.getPageText(ctx, doc, i);
+      mupdf.pageHeight(ctx, doc, i, 72);
+      mupdf.pageWidth(ctx, doc, i, 72);
     }
-    mupdf.freeDocument(doc);
+    mupdf.freeDocument(ctx, doc);
+    mupdf.freeContext(ctx);
   }
 }
 
