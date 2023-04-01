@@ -76,8 +76,6 @@ export namespace MuPdf {
   }
 
   export interface Module extends BaseModule {
-    FS: typeof FS;
-
     createContext(): number;
 
     freeContext(ctx: number): void;
@@ -128,6 +126,7 @@ export namespace MuPdf {
   }
 
   interface BaseModule extends EmscriptenModule {
+    FS: typeof FS;
     setLogger(logger: MuPdfLogger): void;
   }
 }

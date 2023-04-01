@@ -1,5 +1,4 @@
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
-import initMuPdf from "../dist/libmupdf";
 import createMuPdf from "../dist";
 
 main();
@@ -7,7 +6,7 @@ main();
 async function main() {
   const mupdf = await createMuPdf();
   const { FS, openDocument, countPages } = mupdf;
-  /*const pdfFile = readFileSync("./examples/example.pdf");
+  const pdfFile = readFileSync("./examples/example.pdf");
   FS.writeFile("example.pdf", pdfFile);
   const doc = openDocument("example.pdf");
   const n = countPages(doc);
@@ -26,26 +25,7 @@ async function main() {
     writePageToTextFile(i, mupdf, doc);
     writePageSearchToFile(i, mupdf, doc);
   }
-  console.groupEnd();*/
-
-  const pdfFileLg = readFileSync("./examples/example-lg.pdf");
-
-  let iterations = 10000;
-
-  while (iterations--) {
-    const ctx = mupdf.createContext();
-    const doc = mupdf.load(ctx, pdfFileLg);
-    const n = countPages(ctx, doc);
-    for (let i = 1; i <= n; i++) {
-      mupdf.drawPageAsPNG(ctx, doc, i, 72);
-      mupdf.drawPageAsPNGRaw(ctx, doc, i, 72);
-      mupdf.getPageText(ctx, doc, i);
-      mupdf.pageHeight(ctx, doc, i, 72);
-      mupdf.pageWidth(ctx, doc, i, 72);
-    }
-    mupdf.freeDocument(ctx, doc);
-    mupdf.freeContext(ctx);
-  }
+  console.groupEnd();
 }
 
 function writePageToPngFile(i: number, { drawPageAsPNG }: any, doc: any) {
@@ -80,7 +60,6 @@ function writePageSearchToFile(i: number, { searchPageText }: any, doc: any) {
 function writePageToTextFile(i: number, { getPageText }: any, doc: any) {
   writeFileSync(`./examples/text/example-${i}.txt`, getPageText(doc, i));
 }
-
 
 
 function decodeUri(uri: string) {
