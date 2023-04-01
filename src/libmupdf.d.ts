@@ -26,6 +26,8 @@ export namespace MuPdf {
   export interface CommonContextModule extends BaseModule {
 
     ctx: number;
+    freeContext(): void;
+
 
     openDocument(filename: string): DocumentHandle;
 

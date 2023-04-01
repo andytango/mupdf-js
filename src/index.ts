@@ -34,6 +34,10 @@ function wrapMuPdfWithoutContext(muPdf: MuPdf.Module): MuPdf.Instance {
 function wrapMuPdf(ctx: number, muPdf: MuPdf.Module): MuPdf.CommonContextInstance {
 
   const sharedContextMuPdf = {
+    freeContext() {
+      muPdf.freeContext(ctx);
+    },
+
     openDocument(filename: string): MuPdf.DocumentHandle {
       return muPdf.openDocument(ctx, filename);
     },
