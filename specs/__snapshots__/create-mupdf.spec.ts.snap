@@ -5,9 +5,9 @@ exports[`createMuPdf should create a MuPdf instance 1`] = `
   "ready",
   "noExitRuntime",
   "noInitialRun",
+  "locateFile",
   "printErr",
   "print",
-  "locateFile",
   "onRuntimeInitialized",
   "documentOutline",
   "inspect",
@@ -303,6 +303,7 @@ exports[`createMuPdf should create a MuPdf instance 1`] = `
   "outlineNext",
   "getPageText",
   "searchPageText",
+  "ctx",
   "load",
 ]
 `;

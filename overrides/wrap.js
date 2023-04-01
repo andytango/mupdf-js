@@ -190,7 +190,7 @@ Module.onRuntimeInitialized = function () {
     var data = parseDto(dto);
     var resultStr = uint8ArrayToString(data);
     return resultStr.slice(0, -1).split('\n').map(function (line) {
-      var [x, y, w, h, c] = line.split(';').map(function (item) { parseFloat(item); });
+      var [x, y, w, h, c] = line.split(';').map(function (item) { return parseFloat(item); });
       return {x, y, w, h, isContinuation: c === 1};
     })
   }

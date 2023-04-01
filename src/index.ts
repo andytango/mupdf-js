@@ -108,6 +108,7 @@ function wrapMuPdf(ctx: number, muPdf: MuPdf.Module): MuPdf.CommonContextInstanc
   return {
     ...muPdf,
     ...sharedContextMuPdf,
+    ctx,
     load(fileData: Buffer | ArrayBufferView, name = generateFileName()) {
       muPdf.FS.writeFile(name, fileData);
       const doc = muPdf.openDocument(ctx, name);
