@@ -19,7 +19,7 @@ async function runDockerBuildCommand() {
 
   console.log(`Running build command in docker container as user "${user}"`);
   await docker.run(
-    "trzeci/emscripten",
+    "emscripten/emsdk",
     ["/opt/mupdf-js/bin/build.sh"],
     process.stdout,
     {
@@ -37,7 +37,7 @@ async function runDockerBuildCommand() {
 
 function pullImage(docker: Docker) {
   return new Promise((res, rej) => {
-    docker.pull("trzeci/emscripten", (err: any, stream: Stream) => {
+    docker.pull("emscripten/emsdk", (err: any, stream: Stream) => {
       if (err) {
         console.error("Error");
         return rej(err);
