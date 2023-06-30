@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { Stream } from "stream";
 
 const MUPDF_VERSION = "1.20.0";
+const EMSDK_VERSION = "3.1.41";
 
 async function main() {
   await runDockerBuildCommand();
@@ -19,7 +20,7 @@ async function runDockerBuildCommand() {
 
   console.log(`Running build command in docker container as user "${user}"`);
   await docker.run(
-    "emscripten/emsdk",
+    `emscripten/emsdk:${EMSDK_VERSION}`,
     ["/opt/mupdf-js/bin/build.sh"],
     process.stdout,
     {
@@ -37,7 +38,7 @@ async function runDockerBuildCommand() {
 
 function pullImage(docker: Docker) {
   return new Promise((res, rej) => {
-    docker.pull("emscripten/emsdk", (err: any, stream: Stream) => {
+    docker.pull(`emscripten/emsdk:${EMSDK_VERSION}`, (err: any, stream: Stream) => {
       if (err) {
         console.error("Error");
         return rej(err);
