@@ -9,7 +9,7 @@ echo 'Installing pkg-config'
 apt-get install -y pkg-config
 
 echo 'Linking emsdk directory...'
-ln -s /emsdk_portable /opt/emsdk
+ln -s /emsdk /opt/emsdk
 
 echo 'Building MuPDF for wasm'
 cd /src/platform/wasm && make
