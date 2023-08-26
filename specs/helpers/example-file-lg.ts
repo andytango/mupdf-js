@@ -3,7 +3,7 @@ import { createMuPdf, MuPdf } from "../../dist";
 
 const TOTAL_PAGES = 58;
 
-type ExampleFileHandler = { mupdf: MuPdf.Instance; doc: MuPdf.DocumentHandle };
+type ExampleFileHandler = { mupdf: MuPdf.CommonContextInstance; doc: MuPdf.DocumentHandle };
 
 export function loadExampleFileSingleton() {
   let instance = null as null | ExampleFileHandler;

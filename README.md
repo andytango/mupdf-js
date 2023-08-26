@@ -73,6 +73,9 @@ async function handleSomePdf(file) {
   const png = mupdf.drawPageAsPNG(doc, 1, 300);
   const svg = mupdf.drawPageAsSVG(doc, 1);
   const html = mupdf.drawPageAsHTML(doc, 1);
+  
+  // This method returns Uint8Array
+  const pngRaw = mupdf.drawPageAsPNGRaw(doc, 1, 300);
 }
 ```
 
@@ -81,7 +84,11 @@ async function handleSomePdf(file) {
 ### PNG
 
 ```js
-mupdf.drawPageAsPNG(document, page, resolution);
+// Returns PNG as data uri string
+mupdf.drawPageAsPNG(document, page, resolution); 
+
+// Returns PNG data as Uint8Array
+mupdf.drawPageAsPNGRaw(document, page, resolution); 
 ```
 
 Arguments:
@@ -144,6 +151,58 @@ Arguments:
 Returns: *array of found rectangles of text matches ({x: number, y: number, w: number, h: number}[])*
 
 You should set `maxHits` to an appropriate level that a user would expect (for example 100), or allow users to set their own limit. Alternatively, if you want to allow effectively unlimited search hits (and risk running out of memory), you can set it to C's maximum unsigned 32-bit integer size, which is 4294967295.
+
+# Manual context management
+
+By default, mupdf-js creates a MuPDF context upon initialization and uses it for all calls. However, since the context includes a cache, over time this can lead to an increase in the application's memory consumption. To manage the context independently, mupdf-js supports the following:
+
+```js
+import { createMuPdfWithoutContext } from "mupdf-js";
+
+async function handleSomePdf(file) {
+  const mupdf = await createMuPdfWithoutContext();
+  const ctx = mupdf.createContext();
+  const buf = await file.arrayBuffer();
+  const arrayBuf = new Uint8Array(buf);
+  const doc = mupdf.load(ctx, arrayBuf);
+  
+  // Each of these returns a string:
+  
+  const png = mupdf.drawPageAsPNG(ctx, doc, 1, 300);
+  const svg = mupdf.drawPageAsSVG(ctx, doc, 1);
+  const html = mupdf.drawPageAsHTML(ctx, doc, 1);
+  
+  // This method returns Uint8Array
+  const pngRaw = mupdf.drawPageAsPNGRaw(ctx, doc, 1, 300);
+  mupdf.freeDocument(doc);
+  mupdf.freeContext(ctx);
+}
+```
+
+# Custom logging
+
+By default, console.log and console.warn are used for printing errors and other messages. If you prefer to use your custom logger (e.g., pino), you can do the following:
+
+
+```typescript
+import {createMuPdf} from "mupdf-js";
+import pino from 'pino';
+
+const logger = pino();
+
+async function handleSomePdf(file) {
+  const mupdf = await createMuPdf();
+  mupdf.setLogger({
+    log: (...args: any[]) => {
+      logger.debug(...args);
+    },
+    errorLog: (...args: any[]) => {
+      logger.error(...args);
+    },
+  });
+  //...
+}
+```
 
 # Contributing
 
