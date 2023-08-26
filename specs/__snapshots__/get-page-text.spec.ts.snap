@@ -3,7 +3,6 @@
 exports[`getPageText Page [1 / 4] - should get the page text 1`] = `
 "Some text with an embedded font!
 PNG and JPEG images:
-
 "
 `;
 
@@ -35,13 +34,11 @@ Fusce id magna nunc. Curabitur sollicitudin placerat semper. Cras et
 mi neque, a dignissim risus. Nulla venenatis porta lacus, vel rhoncus
 lectus tempor vitae. Duis sagittis venenatis rutrum. Curabitur tempor
 massa tortor.
-
 "
 `;
 
 exports[`getPageText Page [3 / 4] - should get the page text 1`] = `
 "Rendering some SVG paths...
-
 "
 `;
 
@@ -51,6 +48,5 @@ exports[`getPageText Page [4 / 4] - should get the page text 1`] = `
 One
 Two
 Three
-
 "
 `;

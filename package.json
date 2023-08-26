@@ -3,7 +3,7 @@
   "version": "1.1.1",
   "description": "MuPDF compiled to WebAssembly",
   "main": "dist/index.js",
-  "repository": "https://github.com/andytango/mupdf-js",
+  "repository": "https://github.com/anthrax63/mupdf-js",
   "files": [
     "dist"
   ],

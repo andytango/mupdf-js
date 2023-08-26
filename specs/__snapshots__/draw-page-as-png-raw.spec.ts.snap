@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`drawPageAsPNGRaw Page [1 / 4] - should return a png file as Uint8Array 1`] = `"54503f92cfcf175478d0bbd081fa0258"`;
+
+exports[`drawPageAsPNGRaw Page [2 / 4] - should return a png file as Uint8Array 1`] = `"a0ec0d2f8091065021e56468f25a6f97"`;
+
+exports[`drawPageAsPNGRaw Page [3 / 4] - should return a png file as Uint8Array 1`] = `"e81a49d1900df3408f0972800413fa4f"`;
+
+exports[`drawPageAsPNGRaw Page [4 / 4] - should return a png file as Uint8Array 1`] = `"1d034eab46638f0f12dd487c574da774"`;
