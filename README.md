@@ -7,8 +7,15 @@
 > 
 > 👉 __[You can find it here](https://www.npmjs.com/package/mupdf).__ 
 > 
-> _I recommend migrating to the official package, as I am no longer 
-> maintaining this one due to time constraints._
+> __I recommend migrating to the official package, as I am no longer 
+> maintaining this one due to time constraints.__
+> 
+> To nudge you in the right direction, I've pushed a major version of this 
+> package that is a stub and will throw an error if you try to use it.
+> 
+> If you *really* want to use this package, (or if you need it to run legacy 
+> code that depends on it, and you can't update that code for some reason) 
+> you can still install it by manually installing version 0.2.2.
 
 
 [![npm](https://img.shields.io/npm/v/mupdf-js)](https://www.npmjs.com/package/mupdf-js)
