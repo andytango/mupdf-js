@@ -1,4 +1,20 @@
 # 📰 MuPDF.js 
+
+> ## 📢 **IMPORTANT NOTE**
+> 
+> __There is now an official package supported by the MuPDF developers, 
+> which is likely to be more up-to-date and better maintained.__ 
+> 
+> 👉 __[You can find it here](https://www.npmjs.com/package/mupdf).__ 
+> 
+> _I recommend migrating to the official package, as I am no longer 
+> maintaining this one due to time constraints._
+
+
+[![npm](https://img.shields.io/npm/v/mupdf-js)](https://www.npmjs.com/package/mupdf-js)
+[![npm](https://img.shields.io/npm/dt/mupdf-js)](https://www.npmjs.com/package/mupdf-js)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/andrew-t/mupdf-js/Node.js%20CI)](
+
 This is a port of [MuPDF](https://mupdf.com/docs/) to javascript and webassembly, giving you the following:
 
 - 🔥 **Blazing fast** rendering of PDFs to **PNG**, **SVG** and even **HTML**
