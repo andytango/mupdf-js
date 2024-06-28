@@ -1,6 +1,6 @@
 {
   "name": "mupdf-js",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "MuPDF compiled to WebAssembly",
   "main": "dist/index.js",
   "repository": "https://github.com/andytango/mupdf-js",

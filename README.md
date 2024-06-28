@@ -15,12 +15,12 @@
 > 
 > If you *really* want to use this package, (or if you need it to run legacy 
 > code that depends on it, and you can't update that code for some reason) 
-> you can still install it by manually installing version 0.2.2.
+> you can still install it by manually installing version 1.1.1.
 
 
 [![npm](https://img.shields.io/npm/v/mupdf-js)](https://www.npmjs.com/package/mupdf-js)
 [![npm](https://img.shields.io/npm/dt/mupdf-js)](https://www.npmjs.com/package/mupdf-js)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/andrew-t/mupdf-js/Node.js%20CI)](
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/andrew-t/mupdf-js/Node.js%20CI)]
 
 This is a port of [MuPDF](https://mupdf.com/docs/) to javascript and webassembly, giving you the following:
 
