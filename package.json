@@ -1,6 +1,6 @@
 {
   "name": "mupdf-js",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "MuPDF compiled to WebAssembly",
   "main": "dist/index.js",
   "repository": "https://github.com/andytango/mupdf-js",
@@ -8,38 +8,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "yarn build:prep && yarn build:wasm && yarn build:tsc && yarn build:cp",
-    "build:prep": "ts-node ./bin/prep.ts",
-    "build:wasm": "ts-node ./bin/build.ts",
-    "build:tsc": "tsc -p tsconfig.json",
-    "build:cp": "cp ./src/libmupdf.d.ts ./dist",
-    "build:examples": "ts-node ./bin/build-examples.ts",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "build": "tsc -p tsconfig.json"
   },
-  "keywords": [
-    "pdf",
-    "mupdf",
-    "wasm",
-    "webassembly"
-  ],
   "author": "andrew@rioja.io",
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "@types/dockerode": "^3.3.14",
-    "@types/emscripten": "^1.39.4",
-    "@types/jest": "^29.0.3",
-    "@types/needle": "^3.2.0",
-    "@types/node": "^20.3.0",
-    "@types/rimraf": "^3.0.0",
-    "change-case": "^4.1.2",
-    "dockerode": "^3.3.4",
-    "jest": "^29.0.3",
-    "needle": "^3.1.0",
-    "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^29.0.1",
-    "ts-node": "^10.9.1",
     "typescript": "^4.8.3"
-  }
+  },
+  "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774"
 }
